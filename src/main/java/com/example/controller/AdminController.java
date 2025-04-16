@@ -7,10 +7,11 @@ import com.example.service.ChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Controller
 @RequestMapping("/admin")
@@ -53,6 +54,7 @@ public class AdminController {
     public String manageChannels(Model model) {
         try {
             model.addAttribute("channels", channelService.getUpcomingChannels());
+            model.addAttribute("users", userService.getAllUsers());
             return "admin/channels";
         } catch (Exception e) {
             logger.error("Erreur lors de l'accès à la gestion des canaux", e);
@@ -63,5 +65,35 @@ public class AdminController {
     @GetMapping("/test")
     public String testPage() {
         return "admin/test";
+    }
+
+    @PostMapping("/channels")
+    public String createChannel(
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("date") String date,
+            @RequestParam("duration") int duration,
+            @RequestParam("ownerId") Long ownerId,
+            Model model) {
+        try {
+            channelService.createChannel(
+                title,
+                description,
+                LocalDateTime.parse(date),
+                duration,
+                ownerId
+            );
+            return "redirect:/admin/channels";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("channels", channelService.getUpcomingChannels());
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/channels";
+        } catch (Exception e) {
+            logger.error("Erreur lors de la création du channel", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la création du channel");
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/channels";
+        }
     }
 } 

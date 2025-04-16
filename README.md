@@ -133,11 +133,9 @@ spring.session.timeout=30m
 ```
 
 ### Vérification des Sessions
-Pour vérifier les sessions actives, connectez-vous à la base de données PostgreSQL et exécutez :
-```sql
-SELECT * FROM SPRING_SESSION;
-SELECT * FROM SPRING_SESSION_ATTRIBUTES;
-```
+Pour vérifier les sessions actives, connectez-vous à la base de données PostgreSQL via adminer :
+`http://167.86.109.247:8080/?pgsql=167.86.109.247%3A5434&username=postgres&db=chatdb`
+Ajouter le mdp de la db
 
 ### Logging des Sessions
 Pour activer le logging des opérations sur les sessions, ajoutez dans `application.properties` :
@@ -215,7 +213,7 @@ Les expressions disponibles sont :
 1. `${#authentication.name}` : récupère l'email de l'utilisateur connecté
 2. `${#authentication.principal}` : accède à l'objet UserDetails complet
 3. `${#authentication.isAuthenticated()}` : vérifie si l'utilisateur est authentifié
-4. `${#authorization.expression('hasRole(''ROLE_ADMIN'')')}` : vérifie si l'utilisateur a le rôle ADMIN
+4. `${#authorization.expression('hasRole(''ADMIN'')')}` : vérifie si l'utilisateur a le rôle ADMIN
 5. `${#authentication.principal.fullName}` : affiche le nom complet de l'utilisateur si disponible
 
 Exemple d'utilisation dans un template :
@@ -223,7 +221,7 @@ Exemple d'utilisation dans un template :
 <div th:if="${#authentication.isAuthenticated()}">
     Connecté en tant que: <span th:text="${#authentication.name}"></span>
 </div>
-<div th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+<div th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
     <!-- Contenu réservé aux administrateurs -->
 </div>
 ```
@@ -261,8 +259,5 @@ La déconnexion est implémentée en utilisant le formulaire de déconnexion de 
 .logout()
     .logoutUrl("/logout")
     .logoutSuccessUrl("/login?logout")
-    .invalidateHttpSession(true)
-    .deleteCookies("JSESSIONID")
 ```
 
-Cette implémentation suit les meilleures pratiques de sécurité pour la déconnexion et est facile à intégrer dans n'importe quelle page de l'application.

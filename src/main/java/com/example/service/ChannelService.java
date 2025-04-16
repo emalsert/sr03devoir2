@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,13 +16,50 @@ import java.util.Optional;
 @Transactional
 public class ChannelService {
     private final ChannelRepository channelRepository;
+    private final UserService userService;
 
     @Autowired
-    public ChannelService(ChannelRepository channelRepository) {
+    public ChannelService(ChannelRepository channelRepository, UserService userService) {
         this.channelRepository = channelRepository;
+        this.userService = userService;
     }
 
-    public Channel createChannel(Channel channel) {
+    public Channel createChannel(String title, String description, LocalDateTime date, int duration, Long ownerId) {
+        // Validation des champs obligatoires
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le titre du channel est obligatoire");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("La description du channel est obligatoire");
+        }
+        if (date == null) {
+            throw new IllegalArgumentException("La date du channel est obligatoire");
+        }
+        if (duration <= 0) {
+            throw new IllegalArgumentException("La durée du channel doit être positive");
+        }
+        if (ownerId == null) {
+            throw new IllegalArgumentException("Le propriétaire du channel est obligatoire");
+        }
+
+        // Validation de la date (doit être dans le futur)
+        if (date.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("La date du channel doit être dans le futur");
+        }
+
+        // Récupération et validation de l'owner
+        User owner = userService.getUserById(ownerId)
+            .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+
+        // Création du channel
+        Channel channel = new Channel();
+        channel.setTitle(title);
+        channel.setDescription(description);
+        channel.setDate(date);
+        channel.setDuration(Duration.ofHours(duration));
+        channel.setOwner(owner);
+
+        // Sauvegarde du channel
         return channelRepository.save(channel);
     }
 
