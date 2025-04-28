@@ -79,7 +79,35 @@ public class ChannelService {
         return channelRepository.findByDateBetween(start, end);
     }
 
-    public Channel updateChannel(Channel channel) {
+    public Channel updateChannel(Long id, String title, String description, LocalDateTime date, Duration duration) {
+        // Validation des champs obligatoires
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le titre du channel est obligatoire");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("La description du channel est obligatoire");
+        }
+        if (date == null) {
+            throw new IllegalArgumentException("La date du channel est obligatoire");
+        }
+        if (duration.toHours() <= 0) {
+            throw new IllegalArgumentException("La durée du channel doit être positive");
+        }
+        if (date.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("La date du channel doit être dans le futur");
+        }
+
+        // Récupération du channel existant
+        Channel channel = channelRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
+
+        // Mise à jour des champs
+        channel.setTitle(title);
+        channel.setDescription(description);
+        channel.setDate(date);
+        channel.setDuration(duration);
+
+        // Sauvegarde du channel
         return channelRepository.save(channel);
     }
 

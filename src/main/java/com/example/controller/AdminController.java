@@ -97,6 +97,37 @@ public class AdminController {
         }
     }
 
+    @PutMapping("/channels/{id}")
+    public String updateChannel(
+        @PathVariable Long id,
+        @RequestParam("title") String title,
+        @RequestParam("description") String description,
+        @RequestParam("date") String date,
+        @RequestParam("duration") int duration,
+        Model model) {
+        try {
+            channelService.updateChannel(id, title, description, LocalDateTime.parse(date), Duration.ofHours(duration));
+            return "redirect:/admin/channels";
+        } catch (Exception e) {
+            logger.error("Erreur lors de la mise à jour du channel", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la mise à jour du channel");
+            return "admin/channels";
+        }
+    }
+
+    @DeleteMapping("/channels/{id}")
+    public String deleteChannel(@PathVariable Long id, Model model) {
+        try {
+            channelService.deleteChannel(id);
+            return "redirect:/admin/channels";
+        } catch (Exception e) {
+            logger.error("Erreur lors de la suppression du channel", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la suppression du channel");
+            return "admin/channels";
+        }
+    }
+
+
     @PostMapping("/users")
     public String createUser(
             @RequestParam("firstName") String firstName,
@@ -131,4 +162,26 @@ public class AdminController {
             return "admin/users";
         }
     }
+
+    @PutMapping("/users/{id}")
+    public String updateUser(
+        @PathVariable Long id,
+        @RequestParam("firstName") String firstName,
+        @RequestParam("lastName") String lastName,
+        @RequestParam("email") String email,
+        @RequestParam("isAdmin") boolean isAdmin,
+        Model model) {
+        try {
+            userService.updateUser(id, firstName, lastName, email, isAdmin);
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            logger.error("Erreur lors de la mise à jour de l'utilisateur", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la mise à jour de l'utilisateur");
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/users";
+        }
+    }
+
+    
+    
 } 
