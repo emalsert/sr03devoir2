@@ -261,3 +261,5 @@ La déconnexion est implémentée en utilisant le formulaire de déconnexion de 
     .logoutSuccessUrl("/login?logout")
 ```
 
+#Lancer le projet 
+./gradlew bootRun

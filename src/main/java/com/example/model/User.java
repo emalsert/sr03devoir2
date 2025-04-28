@@ -39,4 +39,6 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<Invitation> invitations = new HashSet<>();
+
+    //on delete cascade les tables liées
 } 

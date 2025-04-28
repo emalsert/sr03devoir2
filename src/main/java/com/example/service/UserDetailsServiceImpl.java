@@ -31,7 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         logger.info("Utilisateur trouvé: {}", user.getEmail());
         logger.info("Mot de passe hashé: {}", user.getPassword());
         
-        String[] roles = user.isAdmin() ? new String[]{"ADMIN", "USER"} : new String[]{"USER"};
+        String[] roles = user.isAdmin() ? new String[]{"ADMIN"} : new String[]{"USER"};
         
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
