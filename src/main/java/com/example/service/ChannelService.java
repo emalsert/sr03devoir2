@@ -26,24 +26,25 @@ public class ChannelService {
 
     public Channel createChannel(String title, String description, LocalDateTime date, int duration, Long ownerId) {
         // Validation des champs obligatoires
-        String errorMessage = null;
-        
         if (title == null || title.trim().isEmpty()) {
-            errorMessage = "Le titre du channel est obligatoire";
-        } else if (description == null || description.trim().isEmpty()) {
-            errorMessage = "La description du channel est obligatoire";
-        } else if (date == null) {
-            errorMessage = "La date du channel est obligatoire";
-        } else if (duration <= 0) {
-            errorMessage = "La durée du channel doit être positive";
-        } else if (ownerId == null) {
-            errorMessage = "Le propriétaire du channel est obligatoire";
-        } else if (date.isBefore(LocalDateTime.now())) {
-            errorMessage = "La date du channel doit être dans le futur";
+            throw new IllegalArgumentException("Le titre du channel est obligatoire");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("La description du channel est obligatoire");
+        }
+        if (date == null) {
+            throw new IllegalArgumentException("La date du channel est obligatoire");
+        }
+        if (duration <= 0) {
+            throw new IllegalArgumentException("La durée du channel doit être positive");
+        }
+        if (ownerId == null) {
+            throw new IllegalArgumentException("Le propriétaire du channel est obligatoire");
         }
 
-        if (errorMessage != null) {
-            throw new IllegalArgumentException(errorMessage);
+        // Validation de la date (doit être dans le futur)
+        if (date.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("La date du channel doit être dans le futur");
         }
 
         // Récupération et validation de l'owner
@@ -59,35 +60,6 @@ public class ChannelService {
         channel.setOwner(owner);
 
         // Sauvegarde du channel
-        return channelRepository.save(channel);
-    }
-
-    public Channel updateChannel(Long id, String title, String description, LocalDateTime date, Duration duration) {
-        // Validation des champs obligatoires
-        String errorMessage = null;
-        
-        if (title == null || title.trim().isEmpty()) {
-            errorMessage = "Le titre du channel est obligatoire";
-        } else if (description == null || description.trim().isEmpty()) {
-            errorMessage = "La description du channel est obligatoire";
-        } else if (date == null) {
-            errorMessage = "La date du channel est obligatoire";
-        } else if (duration.toMinutes() <= 0) {
-            errorMessage = "La durée du channel doit être positive";
-        } else if (date.isBefore(LocalDateTime.now())) {
-            errorMessage = "La date du channel doit être dans le futur";
-        }
-
-        if (errorMessage != null) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-        
-        Channel channel = channelRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
-        channel.setTitle(title);
-        channel.setDescription(description);
-        channel.setDate(date);
-        channel.setDuration(duration);
         return channelRepository.save(channel);
     }
 

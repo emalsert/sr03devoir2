@@ -97,33 +97,38 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/channels/{id}")
-    public String updateChannel(
-        @PathVariable Long id,
-        @RequestParam("title") String title,
-        @RequestParam("description") String description,
-        @RequestParam("date") String date,
-        @RequestParam("duration") int duration,
-        Model model) {
+    @PostMapping("/users")
+    public String createUser(
+            @RequestParam("firstName") String firstName,
+            @RequestParam("lastName") String lastName,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("isAdmin") boolean isAdmin,
+            Model model) {
         try {
-            channelService.updateChannel(id, title, description, LocalDateTime.parse(date), Duration.ofHours(duration));
-            return "redirect:/admin/channels";
+            userService.createUser(firstName, lastName, email, password, isAdmin);
+            return "redirect:/admin/users";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/users";
         } catch (Exception e) {
-            logger.error("Erreur lors de la mise à jour du channel", e);
-            model.addAttribute("error", "Une erreur est survenue lors de la mise à jour du channel");
-            return "admin/channels";
+            logger.error("Erreur lors de la création de l'utilisateur", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la création de l'utilisateur");
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/users";
         }
     }
 
-    @DeleteMapping("/channels/{id}")
-    public String deleteChannel(@PathVariable Long id, Model model) {
+    @GetMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable("id") Long id, Model model) {
         try {
-            channelService.deleteChannel(id);
-            return "redirect:/admin/channels";
+            userService.deleteUser(id);
+            return "redirect:/admin/users";
         } catch (Exception e) {
-            logger.error("Erreur lors de la suppression du channel", e);
-            model.addAttribute("error", "Une erreur est survenue lors de la suppression du channel");
-            return "admin/channels";
+            model.addAttribute("error", "Une erreur est survenue lors de la suppression de l'utilisateur.");
+            model.addAttribute("users", userService.getAllUsers());
+            return "admin/users";
         }
     }
 } 
