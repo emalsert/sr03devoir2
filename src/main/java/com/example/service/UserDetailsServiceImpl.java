@@ -31,7 +31,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         logger.info("Utilisateur trouvé: {}", user.getEmail());
         logger.info("Mot de passe hashé: {}", user.getPassword());
         
-        String[] roles = user.isAdmin() ? new String[]{"ADMIN"} : new String[]{"USER"};
+        String[] roles = user.isAdmin() ? new String[]{"ADMIN"} : new String[]{"USER"}; //switch case, au cas ou il y a plusieurs roles, gerer en db plusieurs rles
+        
         
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
