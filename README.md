@@ -97,8 +97,6 @@ Lorsque l'utilisateur clique sur un lien chat une nouvelle fenêtre est ouverte.
 - Formulaire pour modifier / créer un message (textarea)
 - Liste des utilisateurs connectés (sur la droite de la page)
 
-
-
 ## Configuration de la Base de Données
 
 ### Variables d'environnement requises
@@ -146,55 +144,89 @@ logging.level.org.springframework.jdbc.core=DEBUG
 ## Processus d'Authentification
 
 ### Architecture de l'Authentification
-L'application utilise Spring Security pour gérer l'authentification. Le processus est composé de trois parties principales :
+L'application utilise JWT (JSON Web Tokens) pour l'authentification, offrant plusieurs avantages :
 
-1. **UserDetailsServiceImpl** : Service qui charge les informations de l'utilisateur
-2. **SecurityConfig** : Configuration de la sécurité
-3. **LoginController** : Gestion de l'interface de connexion
+1. **Stateless** : Pas besoin de stocker les sessions côté serveur
+2. **Sécurité** : Les tokens sont signés et peuvent contenir des informations chiffrées
+3. **Scalabilité** : Facile à distribuer sur plusieurs serveurs
 
-### Flux d'Authentification
+### Fonctionnement détaillé de JWT
 
-1. **Affichage du Formulaire de Connexion**
-   ```java
-   // LoginController.java
-   @GetMapping("/login")
-   public String login(@RequestParam(value = "error", required = false) String error, Model model) {
-       if (error != null) {
-           logger.error("Échec de la tentative de connexion");
-           model.addAttribute("error", true);
-       }
-       return "login";
+#### Structure d'un JWT
+Un JWT est composé de trois parties séparées par des points :
+1. **Header** : Contient le type de token et l'algorithme de signature
+   ```json
+   {
+     "alg": "HS256",
+     "typ": "JWT"
    }
    ```
-
-2. **Soumission du Formulaire**
-   - Spring Security intercepte automatiquement la requête POST
-   - Appelle `UserDetailsServiceImpl.loadUserByUsername()`
-   - Vérifie les identifiants et les rôles
-   - Note: Aucune méthode POST explicite n'est nécessaire dans le contrôleur car Spring Security gère automatiquement la soumission du formulaire
-
-3. **Gestion des Rôles**
-   ```java
-   // UserDetailsServiceImpl.java
-   String[] roles = user.isAdmin() ? new String[]{"ADMIN", "USER"} : new String[]{"USER"};
+2. **Payload** : Contient les claims (informations) du token
+   ```json
+   {
+     "sub": "user@example.com",
+     "roles": ["USER"],
+     "exp": 1516239022
+   }
+   ```
+3. **Signature** : Signature HMAC du token
+   ```
+   HMACSHA256(
+     base64UrlEncode(header) + "." +
+     base64UrlEncode(payload),
+     secret
+   )
    ```
 
-4. **Redirection**
-   - Succès : Redirection vers la page d'accueil
-   - Échec : Redirection vers `/login?error`
+#### Processus d'authentification
 
-### Protection des Routes
-La protection des routes est entièrement gérée par Spring Security via la configuration dans SecurityConfig. Spring Security intercepte toutes les requêtes HTTP et vérifie les autorisations avant d'y répondre.
+1. **Login** :
+   - L'utilisateur envoie ses identifiants à `/api/auth/login`
+   - Le serveur vérifie les identifiants via `UserDetailsService`
+   - Si valides, un JWT est généré avec :
+     - L'email de l'utilisateur comme subject
+     - Ses rôles
+     - Une date d'expiration
+   - Le token est renvoyé au client
 
-```java
-// A faire : Configuration des routes protégées dans SecurityConfig.java
+2. **Validation du token** :
+   - Le `JwtAuthenticationFilter` intercepte chaque requête
+   - Il extrait le token du header `Authorization: Bearer <token>`
+   - Vérifie la signature avec la clé secrète
+   - Valide la date d'expiration
+   - Extrait les informations utilisateur
+   - Crée un `Authentication` object pour Spring Security
+
+3. **Sécurité** :
+   - Les tokens sont signés avec une clé secrète (`jwt.secret`)
+   - Les tokens expirent après 24h (`jwt.expiration`)
+   - Les tokens sont transmis via HTTPS
+   - Les cookies sont en HTTP-only pour prévenir le vol
+
+### Configuration JWT
+
+La configuration JWT est définie dans `application.properties` :
+
+```properties
+# JWT Configuration
+jwt.secret=${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+jwt.expiration=86400000
 ```
 
-Cette configuration permet à Spring Security de automatiquement:
-1. Intercepter automatiquement toutes les requêtes
-2. Vérifier les rôles et permissions
-3. Rediriger vers la page de login si nécessaire
-4. Protéger contre les accès non autorisés
+### Authentification Admin
+
+L'interface d'administration utilise une authentification JWT via cookie :
+- Le token est stocké dans un cookie HTTP-only
+- Les routes admin sont protégées par le rôle ADMIN
+- La déconnexion invalide le token
+
+### Authentification API
+
+L'API REST utilise JWT via le header Authorization :
+- Format : `Bearer <token>`
+- Les tokens expirent après 24h
+- Les routes publiques sont accessibles sans token
+
 
 
 ### Vérification de l'Authentification

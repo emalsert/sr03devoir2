@@ -1,6 +1,9 @@
 package com.example.service;
 
+import com.example.model.Channel;
 import com.example.model.User;
+import com.example.model.UserChannel;
+import com.example.repository.UserChannelRepository;
 import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -16,11 +20,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserChannelRepository userChannelRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserChannelRepository userChannelRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userChannelRepository = userChannelRepository;
     }
 
     public User createUser(String firstName, String lastName, String email, String password, boolean isAdmin) {
@@ -100,5 +106,14 @@ public class UserService {
     // Vérification du mot de passe pour l'authentification
     public boolean checkPassword(User user, String rawPassword) {
         return passwordEncoder.matches(rawPassword, user.getPassword());
+    }
+
+    public List<Channel> getUserChannels(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        List<UserChannel> userChannels = userChannelRepository.findByUser(user);
+        return userChannels.stream()
+                .map(UserChannel::getChannel)
+                .collect(Collectors.toList());
     }
 }

@@ -2,7 +2,10 @@ package com.example.service;
 
 import com.example.model.Channel;
 import com.example.model.User;
+import com.example.model.UserChannel;
 import com.example.repository.ChannelRepository;
+import com.example.repository.UserChannelRepository;
+import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,39 +19,41 @@ import java.util.Optional;
 @Transactional
 public class ChannelService {
     private final ChannelRepository channelRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
+    private final UserChannelRepository userChannelRepository;
 
     @Autowired
-    public ChannelService(ChannelRepository channelRepository, UserService userService) {
+    public ChannelService(ChannelRepository channelRepository, UserRepository userRepository, UserChannelRepository userChannelRepository) {
         this.channelRepository = channelRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
+        this.userChannelRepository = userChannelRepository;
     }
 
-    public Channel createChannel(String title, String description, LocalDateTime date, int duration, Long ownerId) {
+    public Channel createChannel(String title, String description, LocalDateTime date, Integer duration, Long ownerId) {
         // Validation des champs obligatoires
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Le titre du channel est obligatoire");
+                throw new IllegalArgumentException("Le titre du channel est obligatoire");
         }
         if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("La description du channel est obligatoire");
+                throw new IllegalArgumentException("La description du channel est obligatoire");
         }
         if (date == null) {
-            throw new IllegalArgumentException("La date du channel est obligatoire");
+                throw new IllegalArgumentException("La date du channel est obligatoire");
         }
         if (duration <= 0) {
-            throw new IllegalArgumentException("La durée du channel doit être positive");
+                throw new IllegalArgumentException("La durée du channel doit être positive");
         }
         if (ownerId == null) {
-            throw new IllegalArgumentException("Le propriétaire du channel est obligatoire");
+                throw new IllegalArgumentException("Le propriétaire du channel est obligatoire");
         }
 
         // Validation de la date (doit être dans le futur)
         if (date.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("La date du channel doit être dans le futur");
+                throw new IllegalArgumentException("La date du channel doit être dans le futur");
         }
 
         // Récupération et validation de l'owner
-        User owner = userService.getUserById(ownerId)
+        User owner = userRepository.findById(ownerId)
             .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
 
         // Création du channel
@@ -60,7 +65,15 @@ public class ChannelService {
         channel.setOwner(owner);
 
         // Sauvegarde du channel
-        return channelRepository.save(channel);
+        Channel savedChannel = channelRepository.save(channel);
+
+        // Créer l'entrée dans la table user_channel
+        UserChannel userChannel = new UserChannel();
+        userChannel.setUser(owner);
+        userChannel.setChannel(savedChannel);
+        userChannelRepository.save(userChannel);
+
+        return savedChannel;
     }
 
     public Optional<Channel> getChannelById(Long id) {

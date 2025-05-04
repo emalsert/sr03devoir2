@@ -1,76 +1,54 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="alert alert-info d-flex justify-content-between align-items-center">
-            <div>
-                Connecté en tant que: <span th:text="${#authentication.name}"></span>
-            </div>
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="btn btn-danger btn-sm">Déconnexion</button>
-            </form>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Users Overview</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>Total Users: <span th:text="${#lists.size(users)}"></span></p>
-                        <a href="/admin/users" class="btn btn-primary">Manage Users</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Channels Overview</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>Upcoming Channels: <span th:text="${#lists.size(channels)}"></span></p>
-                        <a href="/admin/channels" class="btn btn-primary">Manage Channels</a>
-                    </div>
-                </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard">Admin Panel</a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-item nav-link text-light" th:text="${username}"></span>
+                <a class="nav-link" href="/admin/logout">Déconnexion</a>
             </div>
         </div>
+    </nav>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Recent Activity</h5>
-                    </div>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Tableau de bord administrateur</h2>
+                <div class="card mt-4">
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Channel</th>
-                                        <th>Date</th>
-                                        <th>Owner</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="channel : ${channels}">
-                                        <td th:text="${channel.title}"></td>
-                                        <td th:text="${#temporals.format(channel.date, 'dd/MM/yyyy HH:mm')}"></td>
-                                        <td th:text="${channel.owner.firstName + ' ' + channel.owner.lastName}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <h5 class="card-title">Actions rapides</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Utilisateurs</h5>
+                                        <p class="card-text">Gérer les utilisateurs</p>
+                                        <a href="/admin/users" class="btn btn-primary">Voir les utilisateurs</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Canaux</h5>
+                                        <p class="card-text">Gérer les canaux</p>
+                                        <a href="/admin/channels" class="btn btn-primary">Voir les canaux</a>
+                                    </div>
+                                </div>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 
