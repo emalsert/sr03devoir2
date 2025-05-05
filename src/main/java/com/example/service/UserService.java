@@ -108,7 +108,7 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
-    public List<Channel> getUserChannels(Long userId) {
+    public List<Channel> getUserChannels(Long userId) { //j'ai utilise la fonction d'après (au final non le prof aime pas donc on reste là)
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         List<UserChannel> userChannels = userChannelRepository.findByUser(user);
@@ -116,4 +116,12 @@ public class UserService {
                 .map(UserChannel::getChannel)
                 .collect(Collectors.toList());
     }
+
+    public Optional<UserChannel> findByUserAndChannel(User user, Channel channel) { //ça utilise JPA pour la jointure
+        return userChannelRepository.findByUserAndChannel(user, channel);
+    }
+
+    //get user invitations
+
+    //Can user join channel
 }

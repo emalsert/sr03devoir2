@@ -30,7 +30,7 @@ public class ChannelRestController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Channel> createChannel(
             @RequestParam String title,
             @RequestParam String description,

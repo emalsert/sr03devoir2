@@ -44,8 +44,8 @@ api.interceptors.response.use(
 export const channelService = {
   getAllChannels: () => api.get('/api/channels'),
   getChannel: (id) => api.get(`/api/channels/${id}`),
-  createChannel: (channel) => api.post('/api/channels', channel),
-  updateChannel: (id, channel) => api.patch(`/api/channels/${id}`, channel),
+  createChannel: (title, description, date, duration, ownerId) => api.post('/api/channels', { title, description, date, duration, ownerId }),
+  updateChannel: (id, title, description, date, duration) => api.patch(`/api/channels/${id}`, { title, description, date, duration }),
   deleteChannel: (id) => api.delete(`/api/channels/${id}`),
 };
 

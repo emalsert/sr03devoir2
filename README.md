@@ -295,3 +295,6 @@ La déconnexion est implémentée en utilisant le formulaire de déconnexion de 
 
 #Lancer le projet 
 ./gradlew bootRun
+
+//npm install avant
+npm run start

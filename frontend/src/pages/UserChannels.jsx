@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { userService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-
+import CanalForm from '../components/CanalForm';
 const UserChannels = () => {
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +70,9 @@ const UserChannels = () => {
           ))}
         </Row>
       )}
+      <h2 className="mb-4">Mes invitations</h2>
+      <h2 className="mb-4">Créer un canal</h2>
+      <CanalForm />
     </Container>
   );
 };

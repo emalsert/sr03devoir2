@@ -127,4 +127,6 @@ public class ChannelService {
     public void deleteChannel(Long id) {
         channelRepository.deleteById(id);
     }
+
+    //get user invitations
 } 
