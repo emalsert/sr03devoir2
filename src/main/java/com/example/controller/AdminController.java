@@ -2,9 +2,12 @@ package com.example.controller;
 
 import com.example.model.User;
 import com.example.model.Channel;
+import com.example.repository.InvitationRepository;
 import com.example.service.UserService;
 import com.example.service.ChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +23,17 @@ public class AdminController {
     private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
     private final UserService userService;
     private final ChannelService channelService;
+    private final InvitationRepository invitationRepository;
 
     @Autowired
-    public AdminController(UserService userService, ChannelService channelService) {
+    public AdminController(
+            UserService userService,
+            ChannelService channelService,
+            InvitationRepository invitationRepository
+    ) {
         this.userService = userService;
         this.channelService = channelService;
+        this.invitationRepository = invitationRepository;
     }
 
     @GetMapping
@@ -43,6 +52,10 @@ public class AdminController {
     public String manageUsers(Model model) {
         try {
             model.addAttribute("users", userService.getAllUsers());
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            model.addAttribute("username", auth.getName());
+
             return "admin/users";
         } catch (Exception e) {
             logger.error("Erreur lors de l'accès à la gestion des utilisateurs", e);
@@ -55,9 +68,30 @@ public class AdminController {
         try {
             model.addAttribute("channels", channelService.getUpcomingChannels());
             model.addAttribute("users", userService.getAllUsers());
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            model.addAttribute("username", auth.getName());
+
             return "admin/channels";
         } catch (Exception e) {
             logger.error("Erreur lors de l'accès à la gestion des canaux", e);
+            return "error";
+        }
+    }
+
+    @GetMapping("/invites")
+    public String manageInvites(Model model) {
+        try {
+            model.addAttribute("invitations", invitationRepository.findAll());
+            model.addAttribute("channels", channelService.getUpcomingChannels());  // Facultatif, si tu veux afficher les channels disponibles
+            model.addAttribute("users", userService.getAllUsers());  // Facultatif, si tu veux afficher les utilisateurs
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            model.addAttribute("username", auth.getName());
+
+            return "admin/invites";  // Vue pour gérer les invitations
+        } catch (Exception e) {
+            logger.error("Erreur lors de l'accès à la gestion des invitations", e);
             return "error";
         }
     }

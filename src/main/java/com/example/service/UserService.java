@@ -1,8 +1,10 @@
 package com.example.service;
 
 import com.example.model.Channel;
+import com.example.model.Invitation;
 import com.example.model.User;
 import com.example.model.UserChannel;
+import com.example.repository.InvitationRepository;
 import com.example.repository.UserChannelRepository;
 import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +23,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserChannelRepository userChannelRepository;
+    private final InvitationRepository invitationRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserChannelRepository userChannelRepository) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            UserChannelRepository userChannelRepository,
+            InvitationRepository invitationRepository
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userChannelRepository = userChannelRepository;
+        this.invitationRepository = invitationRepository;
     }
 
     public User createUser(String firstName, String lastName, String email, String password, boolean isAdmin) {
@@ -121,7 +130,25 @@ public class UserService {
         return userChannelRepository.findByUserAndChannel(user, channel);
     }
 
-    //get user invitations
+    // Get user invitations
+    public List<Invitation> getUserInvites(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return invitationRepository.findByUser(user);
+    }
 
-    //Can user join channel
+    // Can user join channel
+    public boolean canUserJoinChannel(User user, Channel channel) {
+        // Vérifie si l'utilisateur est déjà membre du channel
+        if (userChannelRepository.existsByUserAndChannel(user, channel)) {
+            throw new IllegalStateException("L'utilisateur a déjà rejoint ce channel");
+        }
+
+        // Vérifie si une invitation existe
+        if (!invitationRepository.existsByUserAndChannel(user, channel)) {
+            throw new IllegalStateException("Aucune invitation trouvée pour rejoindre ce channel");
+        }
+
+        return true;
+    }
 }

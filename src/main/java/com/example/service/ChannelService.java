@@ -1,9 +1,11 @@
 package com.example.service;
 
 import com.example.model.Channel;
+import com.example.model.Invitation;
 import com.example.model.User;
 import com.example.model.UserChannel;
 import com.example.repository.ChannelRepository;
+import com.example.repository.InvitationRepository;
 import com.example.repository.UserChannelRepository;
 import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +23,19 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final UserChannelRepository userChannelRepository;
+    private final InvitationRepository invitationRepository;
 
     @Autowired
-    public ChannelService(ChannelRepository channelRepository, UserRepository userRepository, UserChannelRepository userChannelRepository) {
+    public ChannelService(
+            ChannelRepository channelRepository,
+            UserRepository userRepository,
+            UserChannelRepository userChannelRepository,
+            InvitationRepository invitationRepository
+    ) {
         this.channelRepository = channelRepository;
         this.userRepository = userRepository;
         this.userChannelRepository = userChannelRepository;
+        this.invitationRepository = invitationRepository;
     }
 
     public Channel createChannel(String title, String description, LocalDateTime date, Integer duration, Long ownerId) {
@@ -128,5 +137,11 @@ public class ChannelService {
         channelRepository.deleteById(id);
     }
 
-    //get user invitations
-} 
+    // Get channel invitations
+    public List<Invitation> getChannelInvites(Long channelId) {
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
+
+        return invitationRepository.findByChannel(channel);
+    }
+}
