@@ -106,7 +106,7 @@ public class AdminController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("date") String date,
-            @RequestParam("duration") int duration,
+            @RequestParam("duration") int durationMinutes,
             @RequestParam("ownerId") Long ownerId,
             Model model) {
         try {
@@ -114,7 +114,7 @@ public class AdminController {
                 title,
                 description,
                 LocalDateTime.parse(date),
-                duration,
+                durationMinutes,
                 ownerId
             );
             return "redirect:/admin/channels";
@@ -137,10 +137,10 @@ public class AdminController {
         @RequestParam("title") String title,
         @RequestParam("description") String description,
         @RequestParam("date") String date,
-        @RequestParam("duration") int duration,
+        @RequestParam("duration") int durationMinutes,
         Model model) {
         try {
-            channelService.updateChannel(id, title, description, LocalDateTime.parse(date), Duration.ofHours(duration));
+            channelService.updateChannel(id, title, description, LocalDateTime.parse(date), durationMinutes);
             return "redirect:/admin/channels";
         } catch (Exception e) {
             logger.error("Erreur lors de la mise à jour du channel", e);

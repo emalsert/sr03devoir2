@@ -38,7 +38,7 @@ public class ChannelService {
         this.invitationRepository = invitationRepository;
     }
 
-    public Channel createChannel(String title, String description, LocalDateTime date, Integer duration, Long ownerId) {
+    public Channel createChannel(String title, String description, LocalDateTime date, Integer durationMinutes, Long ownerId) {
         // Validation des champs obligatoires
         if (title == null || title.trim().isEmpty()) {
                 throw new IllegalArgumentException("Le titre du channel est obligatoire");
@@ -49,7 +49,7 @@ public class ChannelService {
         if (date == null) {
                 throw new IllegalArgumentException("La date du channel est obligatoire");
         }
-        if (duration <= 0) {
+        if (durationMinutes <= 0) {
                 throw new IllegalArgumentException("La durée du channel doit être positive");
         }
         if (ownerId == null) {
@@ -70,7 +70,7 @@ public class ChannelService {
         channel.setTitle(title);
         channel.setDescription(description);
         channel.setDate(date);
-        channel.setDuration(Duration.ofHours(duration));
+        channel.setDurationMinutes(durationMinutes);
         channel.setOwner(owner);
 
         // Sauvegarde du channel
@@ -101,7 +101,7 @@ public class ChannelService {
         return channelRepository.findByDateBetween(start, end);
     }
 
-    public Channel updateChannel(Long id, String title, String description, LocalDateTime date, Duration duration) {
+    public Channel updateChannel(Long id, String title, String description, LocalDateTime date, Integer durationMinutes) {
         // Validation des champs obligatoires
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("Le titre du channel est obligatoire");
@@ -112,7 +112,7 @@ public class ChannelService {
         if (date == null) {
             throw new IllegalArgumentException("La date du channel est obligatoire");
         }
-        if (duration.toHours() <= 0) {
+        if (durationMinutes <= 0) {
             throw new IllegalArgumentException("La durée du channel doit être positive");
         }
         if (date.isBefore(LocalDateTime.now())) {
@@ -127,7 +127,7 @@ public class ChannelService {
         channel.setTitle(title);
         channel.setDescription(description);
         channel.setDate(date);
-        channel.setDuration(duration);
+        channel.setDurationMinutes(durationMinutes);
 
         // Sauvegarde du channel
         return channelRepository.save(channel);

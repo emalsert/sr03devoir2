@@ -31,10 +31,20 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Routes publiques
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/admin/login", "/login", "/css/**", "/js/**", "/webjars/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/api/channels/create").permitAll()  // Temporairement public pour les tests
+                .requestMatchers("/api/channels/{id}").permitAll()
+                
+                // Routes admin
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                
+                // Routes API
+                .requestMatchers("/api/**").authenticated()
+                
+                // Toutes les autres routes
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

@@ -7,24 +7,58 @@ import { useAuth } from '../contexts/AuthContext';
 const CanalForm = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [date, setDate] = useState('');
-    const [duration, setDuration] = useState('');
-    const [userId, setUserId] = useState('');
+    const [dateTime, setDateTime] = useState('');
+    const [durationMinutes, setDurationMinutes] = useState('');
     const [error, setError] = useState('');
-    //const { user } = useAuth();
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!user) {
+            setError('Vous devez être connecté pour créer un canal');
+            return;
+        }
+
         try {
-            const response = await channelService.createChannel(title, description, date, duration, 1);
+            const response = await channelService.createChannel(
+                title, 
+                description, 
+                dateTime, 
+                durationMinutes, 
+                user.userId
+            );
+            navigate('/channels');
         } catch (error) {
-            setError(error.response?.data || 'Une erreur est survenue');
+            // Gestion améliorée des erreurs
+            let errorMessage = 'Une erreur est survenue';
+            
+            if (error.response) {
+                // L'erreur vient du serveur
+                if (typeof error.response.data === 'string') {
+                    errorMessage = error.response.data;
+                } else if (error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+            } else if (error.message) {
+                // L'erreur vient du client
+                errorMessage = error.message;
+            }
+            
+            setError(errorMessage);
+            console.error('Erreur détaillée:', error);
         }
     }
 
     return (
         <Form onSubmit={handleSubmit}>
-            {error && <Alert variant="danger">{error}</Alert>}
+            {error && (
+                <Alert variant="danger" onClose={() => setError('')} dismissible>
+                    {error}
+                </Alert>
+            )}
             <Form.Group className="mb-3">
                 <Form.Label>Titre</Form.Label>
                 <Form.Control
@@ -37,27 +71,29 @@ const CanalForm = () => {
             <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>
                 <Form.Control
-                    type="text"
+                    as="textarea"
+                    rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     required
                 />
             </Form.Group>
             <Form.Group className="mb-3">
-                <Form.Label>Date</Form.Label>
+                <Form.Label>Date et heure</Form.Label>
                 <Form.Control
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    type="datetime-local"
+                    value={dateTime}
+                    onChange={(e) => setDateTime(e.target.value)}
                     required
                 />
             </Form.Group>
             <Form.Group className="mb-3">
-                <Form.Label>Durée</Form.Label>
+                <Form.Label>Durée (en minutes)</Form.Label>
                 <Form.Control
                     type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
+                    min="1"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
                     required
                 />
             </Form.Group>

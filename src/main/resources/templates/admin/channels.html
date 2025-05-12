@@ -50,7 +50,7 @@
                                 <td th:text="${channel.title}"></td>
                                 <td th:text="${channel.description}"></td>
                                 <td th:text="${#temporals.format(channel.date, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td th:text="${channel.duration.toHours() + 'h'}"></td>
+                                <td th:text="${channel.durationMinutes + ' min'}"></td>
                                 <td th:text="${channel.owner.firstName + ' ' + channel.owner.lastName}"></td>
                                 <td>
                                     <button class="btn btn-sm btn-info" th:onclick="'toggleEditForm(' + ${channel.channelId} + ')'">Edit</button>
@@ -79,8 +79,8 @@
                                                 <input type="datetime-local" class="form-control" id="date" name="date" th:value="${#temporals.format(channel.date, 'yyyy-MM-dd''T''HH:mm')}" required>
                                             </div>
                                             <div class="col-md-2">
-                                                <label for="duration" class="form-label">Duration (hours)</label>
-                                                <input type="number" class="form-control" id="duration" name="duration" th:value="${channel.duration.toHours()}" min="1" required>
+                                                <label for="duration" class="form-label">Duration (minutes)</label>
+                                                <input type="number" class="form-control" id="duration" name="duration" th:value="${channel.durationMinutes}" min="1" required>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
                                                 <button type="submit" class="btn btn-primary me-2">Update</button>
@@ -120,7 +120,7 @@
                             <input type="datetime-local" class="form-control" id="date" name="date" required>
                         </div>
                         <div class="mb-3">
-                            <label for="duration" class="form-label">Duration (hours)</label>
+                            <label for="duration" class="form-label">Duration (minutes)</label>
                             <input type="number" class="form-control" id="duration" name="duration" min="1" required>
                         </div>
                         <div class="mb-3">

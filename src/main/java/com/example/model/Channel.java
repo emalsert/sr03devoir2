@@ -29,11 +29,11 @@ public class Channel {
     private LocalDateTime date;
 
     @Column(nullable = false)
-    private Duration duration;
+    private Integer durationMinutes;  // Durée en minutes
 
-    @OneToMany(mappedBy = "channel")
+    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserChannel> userChannels = new HashSet<>();
 
-    @OneToMany(mappedBy = "channel")
+    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Invitation> invitations = new HashSet<>();
 } 

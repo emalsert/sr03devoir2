@@ -7,7 +7,6 @@ function ChatRoom() {
   const { channelId } = useParams();
   const [channel, setChannel] = useState(null);
   const [newMessage, setNewMessage] = useState('');
-  const messagesEndRef = useRef(null);
   const ws = useRef(null);
 
   useEffect(() => {

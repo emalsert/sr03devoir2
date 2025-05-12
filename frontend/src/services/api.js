@@ -44,9 +44,35 @@ api.interceptors.response.use(
 export const channelService = {
   getAllChannels: () => api.get('/api/channels'),
   getChannel: (id) => api.get(`/api/channels/${id}`),
-  createChannel: (title, description, date, duration, ownerId) => api.post('/api/channels', { title, description, date, duration, ownerId }),
-  updateChannel: (id, title, description, date, duration) => api.patch(`/api/channels/${id}`, { title, description, date, duration }),
-  deleteChannel: (id) => api.delete(`/api/channels/${id}`),
+  createChannel: (title, description, date, durationMinutes, ownerId) => {
+    // Formatage de la date au format YYYY-MM-DDThh:mm:ss
+    const formattedDate = new Date(date).toISOString().slice(0, 19);
+    return api.post('/api/channels/create', null, {
+      params: {
+        title,
+        description,
+        date: formattedDate,
+        durationMinutes: parseInt(durationMinutes),
+        ownerId: parseInt(ownerId)
+      }
+    });
+  },
+  updateChannel: (id, title, description, date, durationMinutes) => {
+    // Formatage de la date au format YYYY-MM-DDThh:mm:ss
+    const formattedDate = new Date(date).toISOString().slice(0, 19);
+    return api.patch(`/api/channels/${id}`, null, {
+      params: {
+        title,
+        description,
+        date: formattedDate,
+        durationMinutes: parseInt(durationMinutes)
+      }
+    });
+  },
+  deleteChannel: async (channelId) => {
+    const response = await api.delete(`/api/channels/${channelId}`);
+    return response.data;
+  },
 };
 
 export const userService = {
@@ -61,7 +87,6 @@ export const userService = {
 };
 
 export const messageService = {
-  getMessages: (channelId) => api.get(`/api/channels/${channelId}/messages`),
   sendMessage: (channelId, message) => api.post(`/api/channels/${channelId}/messages`, message),
 };
 

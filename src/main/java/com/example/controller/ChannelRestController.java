@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,26 +22,26 @@ public class ChannelRestController {
         return ResponseEntity.ok(channelService.getUpcomingChannels());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Channel> getChannel(@PathVariable Long id) {
-        return channelService.getChannelById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PostMapping("/create")
     public ResponseEntity<Channel> createChannel(
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam LocalDateTime date,
-            @RequestParam int duration,
+            @RequestParam int durationMinutes,
             @RequestParam Long ownerId) {
         try {
-            Channel channel = channelService.createChannel(title, description, date, duration, ownerId);
+            Channel channel = channelService.createChannel(title, description, date, durationMinutes, ownerId);
             return ResponseEntity.ok(channel);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Channel> getChannel(@PathVariable Long id) {
+        return channelService.getChannelById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}")
@@ -51,9 +50,9 @@ public class ChannelRestController {
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam LocalDateTime date,
-            @RequestParam int duration) {
+            @RequestParam int durationMinutes) {
         try {
-            Channel channel = channelService.updateChannel(id, title, description, date, Duration.ofHours(duration));
+            Channel channel = channelService.updateChannel(id, title, description, date, durationMinutes);
             return ResponseEntity.ok(channel);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
