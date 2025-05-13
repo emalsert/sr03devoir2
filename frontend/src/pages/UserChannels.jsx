@@ -7,6 +7,9 @@ import EditChannelModal from '../components/EditChannelModal';
 import { useCallback } from 'react';
 
 const UserChannels = () => {
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedChannelId, setSelectedChannelId] = useState('');
   const [channels, setChannels] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +53,20 @@ const UserChannels = () => {
       loadUserChannels();
       loadUserInvitations();
     }
-  }, [user, loadUserChannels, loadUserInvitations]); // Ici on peut se permettre d'ajouter loadUserChannels et loadUserInvitations car elles sont mémorisées
+
+    const fetchUsers = async () => {
+      try {
+        const users = await userService.getAllUsers(); // Assure-toi que cette méthode existe
+        setAllUsers(users.filter(u => u.userId !== user.userId)); // Exclut soi-même
+      } catch (err) {
+        console.error('Erreur lors du chargement des utilisateurs', err);
+      }
+    };
+
+    if (user) {
+      fetchUsers();
+    }
+  }, [user, loadUserChannels, loadUserInvitations]);
 
   // Gérer l'édition d'un canal
   const handleEdit = (channel) => {
@@ -92,6 +108,22 @@ const UserChannels = () => {
       console.error('Error rejecting invitation:', err);
     }
   };
+
+  const handleSendInvitation = async () => {
+    if (!selectedUserId || !selectedChannelId) {
+      alert("Veuillez sélectionner un utilisateur et un canal.");
+      return;
+    }
+
+    try {
+      await invitationService.sendInvitation(Number(selectedUserId), Number(selectedChannelId));
+      alert("Invitation envoyée avec succès !");
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'invitation :", error);
+      alert("Erreur lors de l'envoi de l'invitation.");
+    }
+  };
+
 
   if (loading) {
     return (
@@ -189,6 +221,43 @@ const UserChannels = () => {
               ))}
             </Row>
         )}
+
+        <h2 className="mb-4">Inviter un utilisateur</h2>
+        <Row className="mb-4">
+          <Col md={5}>
+            <select
+                className="form-select"
+                value={selectedChannelId}
+                onChange={(e) => setSelectedChannelId(e.target.value)}
+            >
+              <option value="">Sélectionnez un canal</option>
+              {channels.map((ch) => (
+                  <option key={ch.channelId} value={ch.channelId}>
+                    {ch.title}
+                  </option>
+              ))}
+            </select>
+          </Col>
+          <Col md={5}>
+            <select
+                className="form-select"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+            >
+              <option value="">Sélectionnez un utilisateur</option>
+              {allUsers.map((u) => (
+                  <option key={u.userId} value={u.userId}>
+                    {u.firstName} {u.lastName}
+                  </option>
+              ))}
+            </select>
+          </Col>
+          <Col md={2}>
+            <Button variant="primary" onClick={handleSendInvitation}>
+              Envoyer
+            </Button>
+          </Col>
+        </Row>
 
         {/* Créer un canal */}
         <h2 className="mb-4">Créer un canal</h2>

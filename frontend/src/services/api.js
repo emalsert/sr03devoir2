@@ -85,7 +85,11 @@ export const userService = {
         }
         const response = await api.get(`/api/users/${user.userId}/channels`);
         return response.data;
-    }
+    },
+    getAllUsers: async () => {
+        const response = await api.get('/api/users');
+        return response.data;
+    },
 };
 
 // Service pour les messages
@@ -122,9 +126,18 @@ export const invitationService = {
                 channelId: channelId
             }
         });
-        console.log(response);
         return response.data;
     },
+
+    sendInvitation: async (userId, channelId) => {
+        const response = await api.post('/api/invitations/invite', null, {
+            params: {
+                channelId: channelId,
+                userId: userId,
+            }
+        });
+        return response.data;
+    }
 };
 
 // Services d'authentification

@@ -183,16 +183,30 @@ public class UserService {
 
     @Transactional
     public void declineInvitation(Long invitationId) {
-        // Début de la méthode
-        System.out.println("Début de declineInvitation: invitationId = " + invitationId);
-
         // Récupérer l'invitation par son ID
         Invitation invitation = invitationRepository.findById(invitationId)
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
-        System.out.println("Invitation trouvée: " + invitation);
 
         // Supprime l'invitation
         invitationRepository.delete(invitation);
-        System.out.println("Invitation supprimée: " + invitation);
+    }
+
+    @Transactional
+    public void sendInvitation(Long userId, Long channelId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
+
+        // Vérifie si l'invitation existe déjà
+        if (invitationRepository.findByUserAndChannel(user, channel).isPresent()) {
+            throw new IllegalArgumentException("Invitation already exists");
+        }
+
+        // Crée et sauvegarde l'invitation
+        Invitation invitation = new Invitation();
+        invitation.setUser(user);
+        invitation.setChannel(channel);
+        invitationRepository.save(invitation);
     }
 }
