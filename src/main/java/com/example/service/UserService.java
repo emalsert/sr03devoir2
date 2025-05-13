@@ -6,6 +6,7 @@ import com.example.model.User;
 import com.example.model.UserChannel;
 import com.example.repository.InvitationRepository;
 import com.example.repository.UserChannelRepository;
+import com.example.repository.ChannelRepository;
 import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserChannelRepository userChannelRepository;
+    private final ChannelRepository channelRepository;
     private final InvitationRepository invitationRepository;
 
     @Autowired
@@ -30,11 +32,13 @@ public class UserService {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             UserChannelRepository userChannelRepository,
+            ChannelRepository channelRepository,
             InvitationRepository invitationRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userChannelRepository = userChannelRepository;
+        this.channelRepository = channelRepository;
         this.invitationRepository = invitationRepository;
     }
 
@@ -150,5 +154,45 @@ public class UserService {
         }
 
         return true;
+    }
+
+    @Transactional
+    public void acceptInvitation(Long invitationId) {
+        // Récupérer l'invitation par son ID
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
+
+        // Extraire l'utilisateur et le channel associés à l'invitation
+        User user = invitation.getUser();
+        Channel channel = invitation.getChannel();
+
+        // Vérifie si l'utilisateur est déjà membre du channel
+        if (userChannelRepository.existsByUserAndChannel(user, channel)) {
+            throw new IllegalStateException("L'utilisateur est déjà membre du channel.");
+        }
+
+        // Ajoute l'utilisateur au channel
+        UserChannel userChannel = new UserChannel();
+        userChannel.setUser(user);
+        userChannel.setChannel(channel);
+        userChannelRepository.save(userChannel);
+
+        // Supprime l'invitation
+        invitationRepository.delete(invitation);
+    }
+
+    @Transactional
+    public void declineInvitation(Long invitationId) {
+        // Début de la méthode
+        System.out.println("Début de declineInvitation: invitationId = " + invitationId);
+
+        // Récupérer l'invitation par son ID
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
+        System.out.println("Invitation trouvée: " + invitation);
+
+        // Supprime l'invitation
+        invitationRepository.delete(invitation);
+        System.out.println("Invitation supprimée: " + invitation);
     }
 }
