@@ -36,8 +36,9 @@ public class SecurityConfig {
                 .requestMatchers("/admin/login", "/login", "/css/**", "/js/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/channels/create").permitAll()  // Temporairement public pour les tests
-                .requestMatchers("/api/channels/{id}").permitAll()
-                
+                .requestMatchers("/api/channels/").permitAll()
+                .requestMatchers("/api/invitations/").permitAll()
+
                 // Routes admin
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 
