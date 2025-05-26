@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import CanalForm from '../components/CanalForm';
 import EditChannelModal from '../components/EditChannelModal';
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const UserChannels = () => {
   const [allUsers, setAllUsers] = useState([]);
@@ -17,6 +18,7 @@ const UserChannels = () => {
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Mémorisation des fonctions
   const loadUserChannels = useCallback(async () => {
@@ -124,6 +126,10 @@ const UserChannels = () => {
     }
   };
 
+  // Ajouter la fonction handleJoin
+  const handleJoin = (channelId) => {
+    navigate(`/chat/${channelId}`);
+  };
 
   if (loading) {
     return (
@@ -160,7 +166,14 @@ const UserChannels = () => {
                           <small>Date: {new Date(channel.date).toLocaleDateString()}</small>
                           <small>Durée: {channel.durationMinutes} minutes</small>
                         </div>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 mt-3">
+                          <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => handleJoin(channel.channelId)}
+                          >
+                            Rejoindre le salon
+                          </Button>
                           <Button
                               variant="primary"
                               size="sm"

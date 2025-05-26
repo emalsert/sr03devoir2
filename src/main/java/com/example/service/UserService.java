@@ -121,6 +121,12 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
+    public Long getUserId(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return user.getUserId();
+    }
+
     public List<Channel> getUserChannels(Long userId) { //j'ai utilise la fonction d'après (au final non le prof aime pas donc on reste là)
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));

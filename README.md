@@ -298,3 +298,385 @@ La déconnexion est implémentée en utilisant le formulaire de déconnexion de 
 
 //npm install avant
 npm run start
+
+## Implémentation du Chat WebSocket
+
+### Architecture WebSocket
+
+L'application utilise une architecture WebSocket avec STOMP (Simple Text Oriented Messaging Protocol) pour le chat en temps réel. Cette approche offre plusieurs avantages :
+
+1. **Single WebSocket Connection** : 
+   - Une seule connexion WebSocket par client
+   - Utilisation de STOMP pour le routage des messages
+   - Plus efficace qu'une connexion WebSocket par salon
+
+2. **Structure des connexions** :
+```
+[Client] --ws://localhost:8080/ws--> [Serveur WebSocket Unique]
+                                    |
+                                    |-- /topic/chat/1 (Salon 1)
+                                    |-- /topic/chat/2 (Salon 2)
+                                    |-- /topic/chat/3 (Salon 3)
+```
+
+### Backend Implementation
+
+#### 1. Configuration WebSocket
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.setApplicationDestinationPrefixes("/app");  // Pour envoyer
+        config.enableSimpleBroker("/topic");              // Pour recevoir
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins("http://localhost:3000")
+                .withSockJS();
+    }
+}
+```
+
+#### 2. Gestion des Connexions
+```java
+@Component
+public class WebSocketEventListener {
+    private final ChatWebSocketService chatWebSocketService;
+    
+    @EventListener
+    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
+        // Gestion des connexions
+    }
+
+    @EventListener
+    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+        // Gestion des déconnexions
+    }
+}
+```
+
+#### 3. Stockage des Utilisateurs Connectés
+```java
+@Service
+public class ChatWebSocketService {
+    // Stockage en mémoire des utilisateurs connectés
+    private final Map<Long, Map<String, String>> channelSubscriptions = new ConcurrentHashMap<>();
+    // Structure: channelId -> { sessionId -> username }
+}
+```
+
+### Frontend Implementation
+
+#### 1. Service WebSocket
+```javascript
+class WebSocketService {
+    constructor() {
+        this.client = null;
+        this.subscriptions = new Map();
+    }
+
+    connect() {
+        const socket = new SockJS('http://localhost:8080/ws');
+        this.client = new Client({
+            webSocketFactory: () => socket,
+            // Configuration STOMP
+        });
+    }
+
+    subscribeToChannel(channelId, onMessage) {
+        this.client.subscribe(
+            `/topic/chat/${channelId}`,
+            (message) => { /* ... */ }
+        );
+    }
+}
+```
+
+#### 2. Composant Chat
+```jsx
+function ChatRoom() {
+    useEffect(() => {
+        connectWebSocket();
+        return () => {
+            websocketService.unsubscribeFromChannel(channelId);
+            websocketService.disconnect();
+        };
+    }, [channelId]);
+}
+```
+
+### Flux de Communication
+
+1. **Connexion** :
+   - Client établit une connexion WebSocket via SockJS
+   - STOMP est initialisé sur cette connexion
+   - Client s'abonne aux topics des salons
+
+2. **Envoi de Message** :
+   ```
+   [Client] --/app/chat/123/send--> [Serveur] --/topic/chat/123--> [Autres Clients]
+   ```
+
+3. **Gestion des Utilisateurs** :
+   - Base de données : `user_channel` (membres permanents)
+   - Mémoire : `channelSubscriptions` (utilisateurs connectés)
+
+### Points Importants
+
+1. **Single vs Multiple WebSocket** :
+   - Approche initiale (non utilisée) : Un serveur WebSocket par salon
+   - Approche actuelle : Un serveur WebSocket avec routage STOMP
+   - Avantages : Plus efficace, plus facile à maintenir, meilleure scalabilité
+
+2. **Stockage des Données** :
+   - Membres du canal : Table `user_channel` (BDD)
+   - Utilisateurs connectés : `ConcurrentHashMap` (mémoire)
+   - Messages : Non persistés (en temps réel uniquement)
+
+3. **Sécurité** :
+   - CORS configuré pour le frontend
+   - Authentification via JWT
+   - Validation des accès aux canaux
+
+### Bonnes Pratiques
+
+1. **Organisation du Code** :
+   - `config/` : Configuration WebSocket
+   - `event/` : Gestionnaires d'événements WebSocket
+   - `service/` : Logique métier du chat
+   - `controller/` : Points d'entrée des messages
+
+2. **Gestion des Erreurs** :
+   - Reconnexion automatique
+   - Gestion des déconnexions
+   - Validation des messages
+
+3. **Performance** :
+   - Une seule connexion WebSocket
+   - Utilisation de `ConcurrentHashMap` pour la thread-safety
+   - Heartbeats pour maintenir la connexion active
+
+### Démarrage et Test
+
+1. **Backend** :
+```bash
+./gradlew bootRun
+```
+
+2. **Frontend** :
+```bash
+cd frontend
+npm install
+npm start
+```
+
+3. **Test du Chat** :
+   - Ouvrir `http://localhost:3000` dans plusieurs fenêtres
+   - Se connecter avec différents comptes
+   - Rejoindre un salon
+   - Vérifier la communication en temps réel
+   - Observer la console pour les logs WebSocket
+
+### Gestion des Fichiers dans le Chat
+
+#### Architecture de Gestion des Fichiers
+
+L'application implémente un système de partage de fichiers en temps réel via WebSocket avec les caractéristiques suivantes :
+
+1. **Types de Fichiers Supportés** :
+   - Images : JPEG, PNG, GIF
+   - Documents : PDF
+   - Taille maximale : 5MB par fichier
+
+2. **Flux de Traitement** :
+```
+[Client] --HTTP POST /api/chat/{channelId}/file--> [Serveur]
+         <--WebSocket /topic/chat/{channelId}---- [Serveur]
+```
+
+#### Backend Implementation
+
+1. **Validation des Fichiers** :
+```java
+@Service
+public class ChatWebSocketService {
+    private static final List<String> ALLOWED_IMAGE_TYPES = 
+        List.of("image/jpeg", "image/png", "image/gif");
+    private static final List<String> ALLOWED_DOCUMENT_TYPES = 
+        List.of("application/pdf");
+    private static final int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    public void sendFileToChannel(Long channelId, MultipartFile file, String username) {
+        // Validation du type et de la taille
+        // Conversion en base64
+        // Envoi via WebSocket
+    }
+}
+```
+
+2. **Format des Messages de Fichier** :
+```json
+{
+    "type": "FILE",
+    "sender": "username",
+    "fileName": "example.jpg",
+    "fileType": "image/jpeg",
+    "fileSize": 123456,
+    "content": "base64_encoded_content",
+    "timestamp": 1234567890
+}
+```
+
+#### Frontend Implementation
+
+1. **Service WebSocket** :
+```javascript
+class WebSocketService {
+    validateFile(file) {
+        // Validation du type et de la taille
+    }
+
+    async sendFile(channelId, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        // Envoi via HTTP POST
+    }
+
+    displayFile(message) {
+        // Conversion base64 -> Blob -> URL
+        // Création de l'URL temporaire
+    }
+}
+```
+
+2. **Composant Chat** :
+```jsx
+function ChatRoom() {
+    const handleFileSelect = (event) => {
+        const file = event.target.files[0];
+        websocketService.validateFile(file);
+        // Affichage de la prévisualisation
+    };
+
+    const renderFilePreview = (file) => {
+        // Affichage différent selon le type
+        // Image : prévisualisation
+        // PDF : lien de téléchargement
+    };
+}
+```
+
+#### Points Importants
+
+1. **Stockage Temporaire** :
+   - Les fichiers ne sont pas persistés
+   - Transmis uniquement aux utilisateurs connectés
+   - URLs temporaires côté client
+   - Perdus après déconnexion
+
+2. **Sécurité** :
+   - Validation des types de fichiers
+   - Limite de taille
+   - Authentification requise
+   - Vérification des accès au canal
+
+3. **Performance** :
+   - Conversion en base64 pour le transport
+   - Prévisualisation des images
+   - Gestion optimisée de la mémoire
+
+#### Bonnes Pratiques
+
+1. **Validation** :
+   - Vérification du type MIME
+   - Contrôle de la taille
+   - Nettoyage des noms de fichiers
+
+2. **Gestion des Erreurs** :
+   - Messages d'erreur explicites
+   - Gestion des échecs d'envoi
+   - Nettoyage des ressources
+
+3. **Interface Utilisateur** :
+   - Prévisualisation des images
+   - Indicateur de progression
+   - Messages d'erreur clairs
+   - Boutons d'action contextuels
+
+#### Utilisation
+
+1. **Envoi de Fichier** :
+   - Cliquer sur le bouton "Fichier"
+   - Sélectionner un fichier
+   - Valider l'envoi
+   - Attendre la confirmation
+
+2. **Réception de Fichier** :
+   - Images : affichage direct
+   - PDF : lien de téléchargement
+   - Affichage du nom et de la taille
+   - Horodatage de réception
+
+3. **Limitations** :
+   - Taille max : 5MB
+   - Types : JPEG, PNG, GIF, PDF
+   - Pas de stockage permanent
+   - Disponible uniquement pour les utilisateurs connectés
+
+#### Gestion des URLs Blob
+
+1. **Qu'est-ce qu'une URL Blob ?**
+   - Un Blob (Binary Large Object) est un objet représentant des données binaires
+   - Une URL Blob est une URL temporaire qui pointe vers un Blob en mémoire
+   - Format : `blob:http://localhost:3000/550e8400-e29b-41d4-a716-446655440000`
+
+2. **Cycle de Vie** :
+```
+[Fichier] --> [Base64] --> [Blob] --> [URL Blob] --> [Affichage]
+   ^                                                      |
+   |                                                      v
+   +------------------ [Nettoyage] <------------------ [Utilisation]
+```
+
+3. **Utilisation dans l'Application** :
+```javascript
+// Création d'une URL Blob
+const blob = new Blob([byteArray], { type: fileType });
+const blobUrl = URL.createObjectURL(blob);
+
+// Nettoyage (important !)
+URL.revokeObjectURL(blobUrl);
+```
+
+4. **Avantages** :
+   - Pas de stockage sur le serveur
+   - Affichage immédiat des fichiers
+   - Gestion efficace de la mémoire
+   - Sécurité (URLs uniques et temporaires)
+
+5. **Points d'Attention** :
+   - Les URLs Blob sont temporaires
+   - Nécessitent un nettoyage explicite
+   - Valides uniquement dans le navigateur qui les a créées
+   - Perdues au rechargement de la page
+
+6. **Gestion de la Mémoire** :
+   - Création : `URL.createObjectURL(blob)`
+   - Nettoyage : `URL.revokeObjectURL(blobUrl)`
+   - Nettoyage automatique dans le composant React :
+   ```jsx
+   useEffect(() => {
+       const blobUrl = URL.createObjectURL(blob);
+       return () => URL.revokeObjectURL(blobUrl);
+   }, [blob]);
+   ```
+
+7. **Sécurité** :
+   - URLs uniques par session
+   - Non accessibles depuis d'autres domaines
+   - Expiration à la fermeture du navigateur
+   - Pas de persistance sur le disque

@@ -144,4 +144,19 @@ public class ChannelService {
 
         return invitationRepository.findByChannel(channel);
     }
+
+    // Retourne les ids des utilisateurs d'un channel
+    public List<Long> getChannelUserIds(Long channelId) {
+        // Vérifier si le channel existe
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
+
+        // Récupérer toutes les entrées user_channel pour ce canal
+        List<UserChannel> userChannels = userChannelRepository.findByChannel(channel);
+
+        // Transformer la liste de UserChannel en liste d'IDs utilisateurs
+        return userChannels.stream()
+                .map(userChannel -> userChannel.getUser().getUserId())
+                .toList();
+    }
 }

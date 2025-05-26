@@ -31,13 +31,17 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Ressources statiques et routes système
+                .requestMatchers("/error", "/favicon.ico").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/webjars/**", "/images/**").permitAll()
+                
                 // Routes publiques
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/admin/login", "/login", "/css/**", "/js/**", "/webjars/**").permitAll()
+                .requestMatchers("/admin/login", "/login").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/channels/create").permitAll()  // Temporairement public pour les tests
                 .requestMatchers("/api/channels/").permitAll()
                 .requestMatchers("/api/invitations/").permitAll()
+                .requestMatchers("/ws/**").permitAll()  // Autoriser les connexions WebSocket
 
                 // Routes admin
                 .requestMatchers("/admin/**").hasRole("ADMIN")
