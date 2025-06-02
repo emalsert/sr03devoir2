@@ -206,7 +206,6 @@ function ChatRoom() {
         <Card.Header>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h3>{channel?.name || 'Loading...'}</h3>
               <p className="mb-0">{channel?.description || ''}</p>
             </div>
             <div>

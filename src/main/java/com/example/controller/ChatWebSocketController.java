@@ -64,7 +64,7 @@ public class ChatWebSocketController {
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) throws IOException {
         
-        // Récupérer l'authentification depuis le contexte de sécurité
+        // Récupérer l'authentification depuis le contexte de sécurité à modifier du coup c'est pas la même que le headerAccessor
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth != null ? auth.getName() : "anonymous";
         String sessionId = request.getSession().getId();
