@@ -8,6 +8,7 @@ import EditUserModal from './EditUserModal';
 const Navigation = () => {
     const { user, loading } = useAuth();
     const [showEditUserModal, setShowEditUserModal] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleUserUpdate = () => {
         setShowEditUserModal(false);
@@ -17,8 +18,8 @@ const Navigation = () => {
         return null;
     }
 
-    return (
-        <div className="sidebar">
+    const sidebarContent = (
+        <>
             <div className="sidebar-header">
                 <h3 className="sidebar-brand">PowerChat 📱</h3>
             </div>
@@ -62,7 +63,33 @@ const Navigation = () => {
                     <Logout />
                 </div>
             )}
-        </div>
+        </>
+    );
+
+    return (
+        <>
+            {/* Burger menu visible sur mobile */}
+            <Button
+                className="d-md-none m-2 sidebar-burger"
+                variant="outline-light"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label="Ouvrir le menu"
+            >
+                <i className="fas fa-bars"></i>
+            </Button>
+
+            {/* Sidebar desktop */}
+            <div className="sidebar d-none d-md-flex">
+                {sidebarContent}
+            </div>
+
+            {/* Sidebar mobile */}
+            {sidebarOpen && (
+                <div className="sidebar open d-md-none" onClick={() => setSidebarOpen(false)}>
+                    {sidebarContent}
+                </div>
+            )}
+        </>
     );
 };
 

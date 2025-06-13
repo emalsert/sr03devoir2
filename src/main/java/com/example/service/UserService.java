@@ -142,7 +142,7 @@ public class UserService {
         List<UserChannel> userChannels = userChannelRepository.findByUser(user);
         return userChannels.stream()
                 .map(UserChannel::getChannel)
-                .filter(channel -> channel.getDate().isAfter(LocalDateTime.now()))
+                .filter(channel -> channel.getDate().isAfter(LocalDateTime.now().minusDays(1))) //affiche les channels passés de 1 jour
                 .collect(Collectors.toList());
     }
 
