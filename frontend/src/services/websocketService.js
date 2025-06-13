@@ -1,6 +1,7 @@
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { useAuth } from '../contexts/AuthContext';
+import { API_URL } from './api';
 
 class WebSocketService {
     constructor() {
@@ -28,7 +29,7 @@ class WebSocketService {
         }
 
         return new Promise((resolve, reject) => {
-            const socket = new SockJS('http://localhost:8080/ws');
+            const socket = new SockJS(`${API_URL}/ws`);
             this.client = new Client({
                 webSocketFactory: () => socket,
                 connectHeaders: {
@@ -189,7 +190,7 @@ class WebSocketService {
         formData.append('file', file);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/chat/${channelId}/file`, {
+            const response = await fetch(`${API_URL}/api/chat/${channelId}/file`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -241,7 +242,7 @@ class WebSocketService {
     }
 
     async getChannelUsers(channelId) {
-        const response = await fetch(`http://localhost:8080/api/chat/${channelId}/users`, {
+        const response = await fetch(`${API_URL}/api/chat/${channelId}/users`, {
             method: 'GET',
             credentials: 'include'
         });
