@@ -12,10 +12,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/channels")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ChannelRestController {
     
-
     @Autowired
     private ChannelService channelService;
 

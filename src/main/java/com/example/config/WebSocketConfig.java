@@ -5,6 +5,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Configuration du WebSocket pour l'application de chat.
@@ -19,6 +20,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker  // Active le support des messages WebSocket avec STOMP
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${URL_FRONTEND}")
+    private String urlFrontend;
 
     /**
      * Configure le broker de messages STOMP.
@@ -59,7 +63,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")  // URL d'endpoint pour la connexion WebSocket
-                .setAllowedOrigins("http://localhost:3000")  // Configuration CORS pour le frontend
+                .setAllowedOrigins(urlFrontend)  // Configuration CORS pour le frontend
                 .withSockJS();  // Support des navigateurs plus anciens via SockJS
     }
 } 
