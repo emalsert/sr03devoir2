@@ -20,7 +20,7 @@ api.interceptors.request.use(
             ?.split('=')[1];
 
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Authorization = `${token}`;
         }
         return config;
     },
@@ -46,26 +46,24 @@ export const channelService = {
     getAllChannels: () => api.get('/api/channels'),
     getChannel: (id) => api.get(`/api/channels/${id}`),
     createChannel: (title, description, date, durationMinutes, ownerId) => {
-        // Formatage de la date au format YYYY-MM-DDThh:mm:ss
-        const formattedDate = new Date(date).toISOString().slice(0, 19);
+
         return api.post('/api/channels/create', null, {
             params: {
                 title,
                 description,
-                date: formattedDate,
+                date,
                 durationMinutes: parseInt(durationMinutes),
                 ownerId: parseInt(ownerId)
             }
         });
     },
-    updateChannel: (id, title, description, date, durationMinutes) => {
-        // Formatage de la date au format YYYY-MM-DDThh:mm:ss
-        const formattedDate = new Date(date).toISOString().slice(0, 19);
+    updateChannel: async (id, title, description, date, durationMinutes) => {
+
         return api.patch(`/api/channels/${id}`, null, {
             params: {
                 title,
                 description,
-                date: formattedDate,
+                date,
                 durationMinutes: parseInt(durationMinutes)
             }
         });
@@ -86,10 +84,21 @@ export const userService = {
         const response = await api.get(`/api/users/${user.userId}/channels`);
         return response.data;
     },
+    getCurrentUserChannelsOwner: async (user) => {
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
+        const response = await api.get(`/api/users/${user.userId}/channels/owner`);
+        return response.data;
+    },
     getAllUsers: async () => {
         const response = await api.get('/api/users');
         return response.data;
     },
+    updateUser: async (userId, user) => {
+        const response = await api.put(`/api/users/${userId}/edit`, user);
+        return response.data;
+    }
 };
 
 // Service pour les messages
@@ -129,11 +138,12 @@ export const invitationService = {
         return response.data;
     },
 
-    sendInvitation: async (userId, channelId) => {
+    sendInvitation: async (userId, channelId, inviterId) => {
         const response = await api.post('/api/invitations/invite', null, {
             params: {
                 channelId: channelId,
                 userId: userId,
+                inviterId: inviterId
             }
         });
         return response.data;

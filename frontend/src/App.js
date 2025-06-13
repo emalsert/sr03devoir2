@@ -34,29 +34,31 @@ function AppRoutes() {
     return (
         <>
             <Navigation />
-            <Container className="mt-4">
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route
-                        path="/channels"
-                        element={
-                            <ProtectedRoute>
-                                <UserChannels />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route path="/" element={<Navigate to="/channels" replace />} />
-                    <Route
-                        path="/chat/:channelId"
-                        element={
-                            <ProtectedRoute>
-                                <ChatRoom />
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
-            </Container>
+            <div className="main-content">
+                
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route
+                            path="/channels"
+                            element={
+                                <ProtectedRoute>
+                                    <UserChannels />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="/" element={<Navigate to="/channels" replace />} />
+                        <Route
+                            path="/chat/:channelId"
+                            element={
+                                <ProtectedRoute>
+                                    <ChatRoom />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Routes>
+                
+            </div>
         </>
     );
 }

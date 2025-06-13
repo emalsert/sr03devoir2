@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner, Toast, ToastContainer, Modal } from 'react-bootstrap';
 import { userService, channelService, invitationService } from '../services/api'; // Assurez-vous que invitationService est bien importé
 import { useAuth } from '../contexts/AuthContext';
 import CanalForm from '../components/CanalForm';
 import EditChannelModal from '../components/EditChannelModal';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LottieLoader from '../components/LottieLoader';
 
 const UserChannels = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedChannelId, setSelectedChannelId] = useState('');
   const [channels, setChannels] = useState([]);
+  const [channelsOwner, setChannelsOwner] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,6 +21,11 @@ const UserChannels = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [createChannelAlert, setCreateChannelAlert] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [channelToDelete, setChannelToDelete] = useState(null);
+  const [invitationAlert, setInvitationAlert] = useState(null);
 
   // Mémorisation des fonctions
   const loadUserChannels = useCallback(async () => {
@@ -31,6 +38,22 @@ const UserChannels = () => {
       setError('Erreur lors du chargement des canaux');
       console.error('Error loading user channels:', err);
     } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const loadUserChannelsOwner = useCallback(async () => {
+
+    try {
+      setLoading(true);
+      const channelsOwnerData = await userService.getCurrentUserChannelsOwner(user);
+      setChannelsOwner(channelsOwnerData);
+    }
+    catch (err) {
+      setError('Erreur lors du chargement des canaux');
+      console.error('Error loading user channels:', err);
+    }
+    finally {
       setLoading(false);
     }
   }, [user]);
@@ -53,12 +76,13 @@ const UserChannels = () => {
   useEffect(() => {
     if (user) {
       loadUserChannels();
+      loadUserChannelsOwner();
       loadUserInvitations();
     }
 
     const fetchUsers = async () => {
       try {
-        const users = await userService.getAllUsers(); // Assure-toi que cette méthode existe
+        const users = await userService.getAllUsers(); 
         setAllUsers(users.filter(u => u.userId !== user.userId)); // Exclut soi-même
       } catch (err) {
         console.error('Erreur lors du chargement des utilisateurs', err);
@@ -68,7 +92,7 @@ const UserChannels = () => {
     if (user) {
       fetchUsers();
     }
-  }, [user, loadUserChannels, loadUserInvitations]);
+  }, [user, loadUserChannels, loadUserInvitations, loadUserChannelsOwner]);
 
   // Gérer l'édition d'un canal
   const handleEdit = (channel) => {
@@ -77,15 +101,18 @@ const UserChannels = () => {
   };
 
   // Gérer la suppression d'un canal
-  const handleDelete = async (channel) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce canal ?')) {
+  const handleDelete = async () => {
+    if (!channelToDelete) return;
       try {
-        await channelService.deleteChannel(channel.channelId);
+      await channelService.deleteChannel(channelToDelete.channelId);
         await loadUserChannels();
+      setShowDeleteModal(false);
+      setChannelToDelete(null);
       } catch (err) {
         setError('Erreur lors de la suppression du canal');
         console.error('Error deleting channel:', err);
-      }
+      setShowDeleteModal(false);
+      setChannelToDelete(null);
     }
   };
 
@@ -113,16 +140,14 @@ const UserChannels = () => {
 
   const handleSendInvitation = async () => {
     if (!selectedUserId || !selectedChannelId) {
-      alert("Veuillez sélectionner un utilisateur et un canal.");
+      setInvitationAlert({ success: false, message: "Veuillez sélectionner un utilisateur et un canal." });
       return;
     }
-
     try {
-      await invitationService.sendInvitation(Number(selectedUserId), Number(selectedChannelId));
-      alert("Invitation envoyée avec succès !");
+      await invitationService.sendInvitation(Number(selectedUserId), Number(selectedChannelId), user.userId);
+      setInvitationAlert({ success: true, message: "Invitation envoyée avec succès !" });
     } catch (error) {
-      console.error("Erreur lors de l'envoi de l'invitation :", error);
-      alert("Erreur lors de l'envoi de l'invitation.");
+      setInvitationAlert({ success: false, message: error.response.data });
     }
   };
 
@@ -131,12 +156,24 @@ const UserChannels = () => {
     navigate(`/chat/${channelId}`);
   };
 
+  const handleChannelCreated = (success, message) => {
+    setCreateChannelAlert({ success, message });
+    setShowToast(true);
+    if (success) {
+      setTimeout(() => {
+        setCreateChannelAlert(null);
+        setShowToast(false);
+        loadUserChannels();
+      }, 2000);
+    } else {
+      setTimeout(() => setShowToast(false), 2000);
+    }
+  };
+
   if (loading) {
     return (
         <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Chargement...</span>
-          </Spinner>
+          <LottieLoader size={250} />
         </div>
     );
   }
@@ -150,20 +187,27 @@ const UserChannels = () => {
   }
 
   return (
-      <Container className="mt-4">
+      <Container className="p-4">
+        <Container className="ios-container" id="mes-canaux">
         <h2 className="mb-4">Mes Canaux</h2>
         {channels.length === 0 ? (
             <Alert variant="info">Aucun canal trouvé</Alert>
         ) : (
             <Row>
-              {channels.map((channel) => (
+              {channels.map((channel) => {
+                const now = new Date();
+                const channelStart = new Date(channel.date);
+                const channelEnd = new Date(channelStart.getTime() + channel.durationMinutes * 60000);
+                const canJoin = now >= channelStart && now <= channelEnd;
+
+                return (
                   <Col key={channel.channelId} md={6} lg={4} className="mb-4">
-                    <Card>
+                    <Card className="ios-card">
                       <Card.Body>
                         <Card.Title>{channel.title}</Card.Title>
-                        <Card.Text>{channel.description}</Card.Text>
+                        <Card.Text className="channel-description-truncate">{channel.description}</Card.Text>
                         <div className="d-flex justify-content-between text-muted">
-                          <small>Date: {new Date(channel.date).toLocaleDateString()}</small>
+                          <small>Date: {new Date(channel.date).toLocaleString()}</small>
                           <small>Durée: {channel.durationMinutes} minutes</small>
                         </div>
                         <div className="d-flex gap-2 mt-3">
@@ -171,9 +215,13 @@ const UserChannels = () => {
                               variant="success"
                               size="sm"
                               onClick={() => handleJoin(channel.channelId)}
+                              disabled={!canJoin}
+                              style={!canJoin ? { opacity: 0.5, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
                           >
                             Rejoindre le salon
                           </Button>
+                          {channel.owner?.userId === user.userId && (
+                            <>
                           <Button
                               variant="primary"
                               size="sm"
@@ -184,19 +232,26 @@ const UserChannels = () => {
                           <Button
                               variant="danger"
                               size="sm"
-                              onClick={() => handleDelete(channel)}
+                                onClick={() => {
+                                  setChannelToDelete(channel);
+                                  setShowDeleteModal(true);
+                                }}
                           >
                             Supprimer
                           </Button>
+                            </>
+                          )}
                         </div>
                       </Card.Body>
                     </Card>
                   </Col>
-              ))}
+                );
+              })}
             </Row>
         )}
-
+        </Container>
         {/* Mes Invitations Section */}
+        <Container className="ios-container" id="mes-invitations">
         <h2 className="mb-4">Mes Invitations</h2>
         {invitations.length === 0 ? (
             <Alert variant="info">Aucune invitation reçue</Alert>
@@ -204,11 +259,11 @@ const UserChannels = () => {
             <Row>
               {invitations.map((invitation) => (
                   <Col key={invitation.invitationId} md={6} lg={4} className="mb-4">
-                    <Card>
+                    <Card className="ios-card">
                       <Card.Body>
                         <Card.Title>Channel ID: {invitation.channel.title}</Card.Title>
                         <Card.Text>
-                          Invité par: {invitation.user.firstName} {invitation.user.lastName}
+                          Invité par: {invitation.channel.owner.email}
                         </Card.Text>
                         <div className="d-flex gap-2">
                           {/* Ajouter un bouton pour accepter l'invitation */}
@@ -234,8 +289,20 @@ const UserChannels = () => {
               ))}
             </Row>
         )}
+        </Container>
 
+        <Container className="ios-container" id="invite-user">
         <h2 className="mb-4">Inviter un utilisateur</h2>
+        {invitationAlert && (
+          <Alert
+            variant={invitationAlert.success ? "success" : "danger"}
+            onClose={() => setInvitationAlert(null)}
+            dismissible
+            className="mb-3"
+          >
+            {invitationAlert.message}
+          </Alert>
+        )}
         <Row className="mb-4">
           <Col md={5}>
             <select
@@ -244,7 +311,7 @@ const UserChannels = () => {
                 onChange={(e) => setSelectedChannelId(e.target.value)}
             >
               <option value="">Sélectionnez un canal</option>
-              {channels.map((ch) => (
+              {channelsOwner.map((ch) => (
                   <option key={ch.channelId} value={ch.channelId}>
                     {ch.title}
                   </option>
@@ -271,10 +338,23 @@ const UserChannels = () => {
             </Button>
           </Col>
         </Row>
+        </Container>
 
         {/* Créer un canal */}
+        <Container className="ios-container" id="create-channel">
         <h2 className="mb-4">Créer un canal</h2>
-        <CanalForm />
+          {createChannelAlert && (
+            <Alert
+              variant={createChannelAlert.success ? "success" : "danger"}
+              onClose={() => setCreateChannelAlert(null)}
+              dismissible
+              className="mb-3"
+            >
+              {createChannelAlert.message}
+            </Alert>
+          )}
+          <CanalForm onChannelCreated={handleChannelCreated} />
+        </Container>
 
         {/* Modal d'édition de canal */}
         <EditChannelModal
@@ -286,6 +366,24 @@ const UserChannels = () => {
             channel={selectedChannel}
             onUpdate={loadUserChannels}
         />
+
+        {/* Modal de suppression de canal */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmer la suppression</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Êtes-vous sûr de vouloir supprimer le canal <strong>{channelToDelete?.title}</strong> ? Cette action est irréversible.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Annuler
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Supprimer
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
   );
 };

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore; //pour ignorer les champs dans les réponses JSON
 
 @Data
 @Entity
@@ -25,18 +26,17 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Lob
-    private byte[] avatar;
+    @Column(nullable = true)
+    private String avatar;
 
     @Column(nullable = false)
     private boolean isAdmin = false;
 
-    @Column(nullable = false)
-    private boolean isConnected = false;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<UserChannel> userChannels = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private Set<Invitation> invitations = new HashSet<>();
 

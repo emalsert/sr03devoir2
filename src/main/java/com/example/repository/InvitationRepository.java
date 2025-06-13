@@ -11,7 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface InvitationRepository extends JpaRepository<Invitation, Long> {
-    List<Invitation> findByUser(User user);
+    List<Invitation> findByUserAndStatus(User user, String status);
+
     List<Invitation> findByChannel(Channel channel);
     Optional<Invitation> findByUserAndChannel(User user, Channel channel);
     boolean existsByUserAndChannel(User user, Channel channel);

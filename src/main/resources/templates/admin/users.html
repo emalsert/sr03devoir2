@@ -73,6 +73,10 @@
                                             <option value="false" th:selected="${!user.isAdmin}">User</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label for="avatar" class="form-label">Avatar</label>
+                                        <input type="string" class="form-control" id="avatar" name="avatar" th:value="${user.avatar}" accept="image/*">
+                                    </div>
                                     <div class="col-md-1 d-flex align-items-end">
                                         <button type="submit" class="btn btn-primary me-2">Update</button>
                                         <button type="button" class="btn btn-secondary" th:onclick="'toggleEditForm(' + ${user.userId} + ')'">Cancel</button>

@@ -66,7 +66,7 @@ public class AdminController {
     @GetMapping("/channels")
     public String manageChannels(Model model) {
         try {
-            model.addAttribute("channels", channelService.getUpcomingChannels());
+            model.addAttribute("channels", channelService.getAllChannels());
             model.addAttribute("users", userService.getAllUsers());
 
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -204,9 +204,10 @@ public class AdminController {
         @RequestParam("lastName") String lastName,
         @RequestParam("email") String email,
         @RequestParam("isAdmin") boolean isAdmin,
+        @RequestParam("avatar") String avatar,
         Model model) {
         try {
-            userService.updateUser(id, firstName, lastName, email, isAdmin);
+            userService.updateUser(id, firstName, lastName, email, isAdmin, avatar);
             return "redirect:/admin/users";
         } catch (Exception e) {
             logger.error("Erreur lors de la mise à jour de l'utilisateur", e);

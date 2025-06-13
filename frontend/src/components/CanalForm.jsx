@@ -4,7 +4,7 @@ import { Form, Button, Alert } from 'react-bootstrap';
 import { channelService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
-const CanalForm = () => {
+const CanalForm = ({ onChannelCreated }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [dateTime, setDateTime] = useState('');
@@ -15,8 +15,22 @@ const CanalForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!user) {
-            setError('Vous devez être connecté pour créer un canal');
+
+        // Validation côté client
+        const now = new Date();
+        const selectedDate = new Date(dateTime);
+
+
+        if (isNaN(selectedDate.getTime())) {
+            setError("La date est invalide.");
+            return;
+        }
+        if (selectedDate.getTime() <= now.getTime()) {
+            setError("La date doit être dans le futur.");
+            return;
+        }
+        if (!durationMinutes || isNaN(durationMinutes) || Number(durationMinutes) <= 0) {
+            setError("La durée doit être un nombre positif.");
             return;
         }
 
@@ -28,27 +42,9 @@ const CanalForm = () => {
                 durationMinutes, 
                 user.userId
             );
-            navigate('/channels');
+            if (onChannelCreated) onChannelCreated(true, response.data);
         } catch (error) {
-            // Gestion améliorée des erreurs
-            let errorMessage = 'Une erreur est survenue';
-            
-            if (error.response) {
-                // L'erreur vient du serveur
-                if (typeof error.response.data === 'string') {
-                    errorMessage = error.response.data;
-                } else if (error.response.data.message) {
-                    errorMessage = error.response.data.message;
-                } else if (error.response.data.error) {
-                    errorMessage = error.response.data.error;
-                }
-            } else if (error.message) {
-                // L'erreur vient du client
-                errorMessage = error.message;
-            }
-            
-            setError(errorMessage);
-            console.error('Erreur détaillée:', error);
+            setError(error.response.data);
         }
     }
 
@@ -83,6 +79,7 @@ const CanalForm = () => {
                 <Form.Control
                     type="datetime-local"
                     value={dateTime}
+                    min={new Date().toISOString().slice(0, 16)}
                     onChange={(e) => setDateTime(e.target.value)}
                     required
                 />

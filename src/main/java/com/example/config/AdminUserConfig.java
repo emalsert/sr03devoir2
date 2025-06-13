@@ -21,7 +21,6 @@ public class AdminUserConfig {
                 admin.setEmail("admin@example.com");
                 admin.setPassword(passwordEncoder.encode("admin123"));
                 admin.setAdmin(true);
-                admin.setConnected(false);
                 userRepository.save(admin);
                 System.out.println("Admin user created successfully!");
             } else {

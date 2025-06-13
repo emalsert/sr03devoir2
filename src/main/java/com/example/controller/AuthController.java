@@ -61,11 +61,10 @@ public class AuthController {
 
             // Créer le cookie avec le token JWT
             Cookie jwtCookie = new Cookie("jwt", token);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(true); // Pour HTTPS
+            jwtCookie.setHttpOnly(false); // pour pouvoir l'extraire côté client pour l'envoyer via websocket
+            jwtCookie.setSecure(false); // on est en http pour le moment
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 heures
-            jwtCookie.setDomain("localhost");
             response.addCookie(jwtCookie);
 
             Map<String, Object> responseBody = new HashMap<>();
@@ -96,11 +95,10 @@ public class AuthController {
 
             // Créer le cookie avec le token JWT
             Cookie jwtCookie = new Cookie("jwt", token);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setSecure(true); // Pour HTTPS
+            jwtCookie.setHttpOnly(false);
+            jwtCookie.setSecure(false);
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(24 * 60 * 60); // 24 heures
-            jwtCookie.setDomain("localhost");
             response.addCookie(jwtCookie);
 
             Map<String, Object> responseBody = new HashMap<>();

@@ -91,3 +91,5 @@ frontend/**/node_modules/
 .eslintcache
 **/node_modules/.cache/
 **/.cache/
+
+frontend/node_modules/.caches/

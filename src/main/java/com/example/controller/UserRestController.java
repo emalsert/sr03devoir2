@@ -22,9 +22,19 @@ public class UserRestController {
         return ResponseEntity.ok(userService.getUserChannels(userId));
     }
 
+    @GetMapping("/{userId}/channels/owner")
+    public ResponseEntity<List<Channel>> getUserChannelsOwner(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserChannelsOwner(userId));
+    }
+
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @PutMapping("/{userId}/edit")
+    public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateUser(userId, user.getFirstName(), user.getLastName(), user.getEmail(), user.isAdmin(), user.getAvatar()));
     }
 }
  

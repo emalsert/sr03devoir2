@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Form, Button, ListGroup, Alert, Modal } from 'react-bootstrap';
+import { Container, Card, Form, Button, ListGroup, Alert, Modal } from 'react-bootstrap';
 import { channelService } from '../services/api';
 import { websocketService } from '../services/websocketService';
+import { useAuth } from '../contexts/AuthContext';
+import LottieLoader from '../components/LottieLoader';
 
 function ChatRoom() {
   const { channelId } = useParams();
+  const { user } = useAuth();
   const [channel, setChannel] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState(null);
-  const [connectedUsers, setConnectedUsers] = useState({});
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
+  const [usersConnected, setUsersConnected] = useState([]);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     loadChannel();
     connectWebSocket();
-
+    getChannelUsers();
     return () => {
       websocketService.unsubscribeFromChannel(channelId);
       websocketService.disconnect();
@@ -50,14 +53,23 @@ function ChatRoom() {
       await websocketService.connect();
       websocketService.subscribeToChannel(channelId, (message) => {
         if (typeof message === 'string') {
-          // Message simple
+          // Message simple - ce cas ne devrait plus arriver car tous les messages sont maintenant des objets JSON
           setMessages(prev => [...prev, { 
             type: 'TEXT',
             content: message, 
+            sender: 'Unknown',
             timestamp: new Date() 
           }]);
         } else if (message && typeof message === 'object') {
-          if (message.type === 'FILE') {
+          if (message.type === 'TEXT') {
+            // Message texte
+            setMessages(prev => [...prev, {
+              type: 'TEXT',
+              content: message.content || '',
+              sender: message.sender || 'Unknown',
+              timestamp: new Date(message.timestamp || Date.now())
+            }]);
+          } else if (message.type === 'FILE') {
             // Message avec fichier
             const fileData = websocketService.displayFile(message);
             if (fileData) {
@@ -68,14 +80,6 @@ function ChatRoom() {
                 timestamp: new Date(message.timestamp || Date.now())
               }]);
             }
-          } else if (message.type === 'USER_JOINED') {
-            // Mise à jour des utilisateurs connectés
-            if (message.connectedUsers && typeof message.connectedUsers === 'object') {
-              setConnectedUsers(message.connectedUsers);
-            }
-          } else if (!message.type && Object.keys(message).length > 0) {
-            // Liste des utilisateurs connectés (format Map)
-            setConnectedUsers(message);
           }
         }
       });
@@ -85,12 +89,28 @@ function ChatRoom() {
     }
   };
 
+  const getChannelUsers = async () => {
+    try {
+    const users = await websocketService.getChannelUsers(channelId);
+    setUsersConnected(users);
+    console.log(users);
+    
+    // Refresh every 2 seconds
+    setTimeout(() => {
+        getChannelUsers();
+      }, 10000);
+    } catch (error) {
+      console.error('Error getting channel users:', error);
+    }
+  };
+
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     try {
-      await websocketService.sendMessage(channelId, newMessage);
+      websocketService.sendMessage(channelId, newMessage);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -134,29 +154,28 @@ function ChatRoom() {
 
     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
     const sender = msg.sender || 'Unknown';
+    const isOwnMessage = msg.sender === user?.email; // ou user?.username selon ton modèle
 
     if (msg.type === 'FILE' && msg.url) {
       return (
-        <ListGroup.Item key={index} className="border-0">
-          <div className="d-flex flex-column">
-            <small className="text-muted">
-              {sender} - {timestamp}
-            </small>
+        <div key={index} className={`message-container ${isOwnMessage ? 'own-message' : 'other-message'}`}>
+          <div className={`message-bubble ${isOwnMessage ? 'own' : 'other'}`}>
+            <div className={`message-sender ${isOwnMessage ? 'sender-own' : ''}`}>{sender}</div>
             {renderFilePreview(msg)}
+            <div className="message-timestamp">{timestamp}</div>
           </div>
-        </ListGroup.Item>
+        </div>
       );
     }
     
     return (
-      <ListGroup.Item key={index} className="border-0">
-        <div className="d-flex flex-column">
-          <small className="text-muted">
-            {timestamp}
-          </small>
+      <div key={index} className={`message-container ${isOwnMessage ? 'own-message' : 'other-message'}`}>
+        <div className={`message-bubble ${isOwnMessage ? 'own' : 'other'}`}>
+          <div className={`message-sender ${isOwnMessage ? 'sender-own' : ''}`}>{sender}</div>
           <div>{msg.content || ''}</div>
+          <div className="message-timestamp">{timestamp}</div>
         </div>
-      </ListGroup.Item>
+      </div>
     );
   };
 
@@ -172,7 +191,7 @@ function ChatRoom() {
             className="img-fluid rounded" 
             style={{ maxHeight: '200px' }} 
           />
-          <div className="mt-2">
+          <div className="mt-2 file-name">
             <small>{file.fileName || 'Image'}</small>
           </div>
         </div>
@@ -180,9 +199,7 @@ function ChatRoom() {
     } else if (file.fileType === 'application/pdf') {
       return (
         <div className="file-preview">
-          <div className="pdf-preview p-3 bg-light rounded">
-            <span>{file.fileName || 'Document PDF'}</span>
-          </div>
+          <div className="file-name">{file.fileName || 'Document PDF'}</div>
           <a 
             href={file.url} 
             download={file.fileName || 'document.pdf'} 
@@ -197,21 +214,20 @@ function ChatRoom() {
   };
 
   if (!channel) {
-    return <div>Loading...</div>;
+    return <LottieLoader size={250}  />;
   }
 
   return (
-    <>
+    <Container className="p-4">
       <Card>
         <Card.Header>
           <div className="d-flex justify-content-between align-items-center">
             <div>
+              <h3 className="mb-0">{channel?.title || ''}</h3>
               <p className="mb-0">{channel?.description || ''}</p>
             </div>
             <div>
-              <small className="text-muted">
-                {Object.keys(connectedUsers).length} user{Object.keys(connectedUsers).length !== 1 ? 's' : ''} online
-              </small>
+              <p className="mb-0">Utilisateurs connectés: {usersConnected.length}</p>
             </div>
           </div>
         </Card.Header>
@@ -223,11 +239,9 @@ function ChatRoom() {
         )}
 
         <Card.Body>
-          <div style={{ height: '400px', overflowY: 'auto' }} className="mb-3">
-            <ListGroup variant="flush">
-              {messages.map((msg, index) => renderMessage(msg, index))}
-              <div ref={messagesEndRef} />
-            </ListGroup>
+          <div className="chat-container mb-3">
+            {messages.map((msg, index) => renderMessage(msg, index))}
+            <div ref={messagesEndRef} />
           </div>
 
           <Form onSubmit={handleSendMessage}>
@@ -236,7 +250,7 @@ function ChatRoom() {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
+                placeholder="Tapez votre message..."
                 disabled={!websocketService.isConnected()}
               />
               <input
@@ -260,7 +274,7 @@ function ChatRoom() {
                 className="ms-2"
                 disabled={!websocketService.isConnected()}
               >
-                Send
+                Envoyer
               </Button>
             </div>
           </Form>
@@ -309,7 +323,7 @@ function ChatRoom() {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </Container>
   );
 }
 

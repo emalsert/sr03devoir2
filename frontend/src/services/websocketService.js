@@ -16,6 +16,13 @@ class WebSocketService {
     }
 
     connect() {
+        
+         // Récupérer le token depuis le cookie
+         const token = document.cookie
+         .split('; ')
+         .find(row => row.startsWith('jwt='))
+         ?.split('=')[1];
+        
         if (this.client && this.client.connected) {
             return Promise.resolve();
         }
@@ -24,6 +31,9 @@ class WebSocketService {
             const socket = new SockJS('http://localhost:8080/ws');
             this.client = new Client({
                 webSocketFactory: () => socket,
+                connectHeaders: {
+                    'Authorization': `Bearer ${token}` // Envoyer le JWT
+                },
                 debug: (str) => {
                     console.log('STOMP Debug:', str);
                 },
@@ -135,9 +145,33 @@ class WebSocketService {
             throw new Error('WebSocket not connected');
         }
 
-        this.client.publish({
-            destination: `/app/chat/${channelId}/send`,
-            body: content
+        // Méthode plus robuste pour récupérer le cookie jwt
+        const getCookie = (name) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+            return null;
+        };
+
+        const token = getCookie('jwt');
+        console.log('Token récupéré:', token); // Debug
+        console.log('Tous les cookies:', document.cookie); // Debug
+
+        return new Promise((resolve, reject) => {
+            try {
+                this.client.publish({
+                    destination: `/app/chat/${channelId}/send`,
+                    body: content,
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
@@ -158,7 +192,7 @@ class WebSocketService {
             const response = await fetch(`http://localhost:8080/api/chat/${channelId}/file`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include' // Pour inclure les cookies d'authentification à vérifier si utile
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -204,6 +238,15 @@ class WebSocketService {
             fileName,
             fileType
         };
+    }
+
+    async getChannelUsers(channelId) {
+        const response = await fetch(`http://localhost:8080/api/chat/${channelId}/users`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        return response.json();
     }
 }
 

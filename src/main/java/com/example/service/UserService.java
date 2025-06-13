@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User updateUser(Long id, String firstName, String lastName, String email, boolean isAdmin) {
+    public User updateUser(Long id, String firstName, String lastName, String email, boolean isAdmin, String avatar) {
         // Validation des champs obligatoires
         if (firstName == null || firstName.trim().isEmpty()) {
             throw new IllegalArgumentException("Le prénom est obligatoire");
@@ -96,15 +97,23 @@ public class UserService {
 
         // Récupération de l'utilisateur existant
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new IllegalArgumentException("Utilisateur n'existe pas"));
 
         // Mise à jour des champs
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email);
         user.setAdmin(isAdmin);
+        user.setAvatar(avatar);
 
         // Sauvegarde de l'utilisateur
+        return userRepository.save(user);
+    }
+
+    public User updateUserAvatar(Long id, String avatar) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User n'existe pas"));
+        user.setAvatar(avatar);
         return userRepository.save(user);
     }
 
@@ -123,17 +132,25 @@ public class UserService {
 
     public Long getUserId(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User n'existe pas"));
         return user.getUserId();
     }
 
-    public List<Channel> getUserChannels(Long userId) { //j'ai utilise la fonction d'après (au final non le prof aime pas donc on reste là)
+    public List<Channel> getUserChannels(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         List<UserChannel> userChannels = userChannelRepository.findByUser(user);
         return userChannels.stream()
                 .map(UserChannel::getChannel)
+                .filter(channel -> channel.getDate().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
+    }
+
+    public List<Channel> getUserChannelsOwner(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        List<Channel> channels = channelRepository.findByOwner(user);
+        return channels;
     }
 
     public Optional<UserChannel> findByUserAndChannel(User user, Channel channel) { //ça utilise JPA pour la jointure
@@ -143,8 +160,8 @@ public class UserService {
     // Get user invitations
     public List<Invitation> getUserInvites(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return invitationRepository.findByUser(user);
+                .orElseThrow(() -> new IllegalArgumentException("User n'existe pas"));
+        return invitationRepository.findByUserAndStatus(user, "pending");
     }
 
     // Can user join channel
@@ -166,7 +183,7 @@ public class UserService {
     public void acceptInvitation(Long invitationId) {
         // Récupérer l'invitation par son ID
         Invitation invitation = invitationRepository.findById(invitationId)
-                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Invitation n'existe pas"));
 
         // Extraire l'utilisateur et le channel associés à l'invitation
         User user = invitation.getUser();
@@ -183,15 +200,16 @@ public class UserService {
         userChannel.setChannel(channel);
         userChannelRepository.save(userChannel);
 
-        // Supprime l'invitation
-        invitationRepository.delete(invitation);
+        // Masque l'invitation
+        invitation.setStatus("accepted");
+        invitationRepository.save(invitation);
     }
 
     @Transactional
     public void declineInvitation(Long invitationId) {
         // Récupérer l'invitation par son ID
         Invitation invitation = invitationRepository.findById(invitationId)
-                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Invitation n'existe pas"));
 
         // Supprime l'invitation
         invitationRepository.delete(invitation);
@@ -200,19 +218,24 @@ public class UserService {
     @Transactional
     public void sendInvitation(Long userId, Long channelId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User n'existe pas"));
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new IllegalArgumentException("Channel not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Channel n'existe pas"));
 
         // Vérifie si l'invitation existe déjà
-        if (invitationRepository.findByUserAndChannel(user, channel).isPresent()) {
-            throw new IllegalArgumentException("Invitation already exists");
+        Invitation invitationTemp = invitationRepository.findByUserAndChannel(user, channel).orElse(null);
+        if (invitationTemp != null && invitationTemp.getStatus().equals("pending")) {
+            throw new IllegalArgumentException("Invitation est deja en attente");
+        }
+        if (invitationTemp != null && invitationTemp.getStatus().equals("accepted")) {
+            throw new IllegalArgumentException("Invitation est deja acceptee");
         }
 
         // Crée et sauvegarde l'invitation
         Invitation invitation = new Invitation();
         invitation.setUser(user);
         invitation.setChannel(channel);
+        invitation.setStatus("pending");
         invitationRepository.save(invitation);
     }
 }

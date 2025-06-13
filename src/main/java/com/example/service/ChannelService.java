@@ -97,6 +97,10 @@ public class ChannelService {
         return channelRepository.findByDateAfter(LocalDateTime.now());
     }
 
+    public List<Channel> getAllChannels() {
+        return channelRepository.findAll();
+    }
+
     public List<Channel> getChannelsBetween(LocalDateTime start, LocalDateTime end) {
         return channelRepository.findByDateBetween(start, end);
     }

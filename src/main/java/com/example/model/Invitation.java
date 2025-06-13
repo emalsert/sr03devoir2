@@ -11,6 +11,9 @@ public class Invitation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long invitationId;
 
+    @Column(name = "status", nullable = false)
+    private String status;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
