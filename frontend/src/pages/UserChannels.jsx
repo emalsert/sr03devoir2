@@ -119,7 +119,7 @@ const UserChannels = () => {
   // Gérer l'acceptation d'une invitation
   const handleAccept = async (invitation) => {
     try {
-      await invitationService.acceptInvitation(invitation.invitationId, invitation.channel.channelId);
+      await invitationService.acceptInvitation(invitation.invitationId);
       await loadUserInvitations(); // Recharger les invitations
     } catch (err) {
       setError('Erreur lors de l\'acceptation de l\'invitation');
@@ -130,7 +130,7 @@ const UserChannels = () => {
   // Gérer le rejet d'une invitation
   const handleReject = async (invitation) => {
     try {
-      await invitationService.declineInvitation(invitation.invitationId, invitation.channel.channelId);
+      await invitationService.declineInvitation(invitation.invitationId);
       await loadUserInvitations(); // Recharger les invitations
     } catch (err) {
       setError('Erreur lors du rejet de l\'invitation');

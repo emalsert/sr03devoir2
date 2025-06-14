@@ -30,6 +30,7 @@ public class InvitesRestController {
     public ResponseEntity<List<Invitation>> getInvitationsForUser(@PathVariable Long userId) {
         try {
             List<Invitation> invitations = userService.getUserInvites(userId);
+
             return ResponseEntity.ok(invitations);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -38,8 +39,7 @@ public class InvitesRestController {
 
     @PostMapping("/{invitationId}/accept")
     public ResponseEntity<?> acceptInvitation(
-            @PathVariable Long invitationId,
-            @RequestParam Long channelId) {
+            @PathVariable Long invitationId) {
 
         try {
             // Appel du service pour accepter l'invitation
@@ -53,8 +53,7 @@ public class InvitesRestController {
 
     @PostMapping("/{invitationId}/decline")
     public ResponseEntity<?> declineInvitation(
-            @PathVariable Long invitationId,
-            @RequestParam Long channelId) {  // Le deuxième paramètre ajouté
+            @PathVariable Long invitationId) {  // Le deuxième paramètre ajouté
         try {
             // Appel du service pour refuser l'invitation
             userService.declineInvitation(invitationId);

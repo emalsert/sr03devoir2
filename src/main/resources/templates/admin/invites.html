@@ -40,6 +40,12 @@
                     <tr th:each="invitation : ${invitations}">
                         <td th:text="${invitation.user.firstName + ' ' + invitation.user.lastName}"></td>
                         <td th:text="${invitation.channel.title}"></td>
+                        <td>
+                            <form th:action="@{/admin/invites/{id}(id=${invitation.invitationId})}" method="post" style="display: inline;">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette invitation ?')">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

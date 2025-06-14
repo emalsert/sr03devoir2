@@ -189,6 +189,8 @@ public class UserService {
         User user = invitation.getUser();
         Channel channel = invitation.getChannel();
 
+        userChannelRepository.existsByUserAndChannel(user, channel);
+
         // Vérifie si l'utilisateur est déjà membre du channel
         if (userChannelRepository.existsByUserAndChannel(user, channel)) {
             throw new IllegalStateException("L'utilisateur est déjà membre du channel.");

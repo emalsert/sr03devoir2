@@ -118,23 +118,15 @@ export const invitationService = {
     },
 
     // Accepter une invitation
-    acceptInvitation: async (invitationId, channelId) => {
-        const response = await api.post(`/api/invitations/${invitationId}/accept`, null, {
-            params: {
-                channelId: channelId
-            }
-        });
+    acceptInvitation: async (invitationId) => {
+        const response = await api.post(`/api/invitations/${invitationId}/accept`);
         console.log(response);
         return response.data;
     },
 
     // Rejeter une invitation
     declineInvitation: async (invitationId, channelId) => {
-        const response = await api.post(`/api/invitations/${invitationId}/decline`, null, {
-            params: {
-                channelId: channelId
-            }
-        });
+        const response = await api.post(`/api/invitations/${invitationId}/decline`);
         return response.data;
     },
 

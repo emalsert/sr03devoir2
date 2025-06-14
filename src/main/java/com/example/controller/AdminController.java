@@ -83,8 +83,6 @@ public class AdminController {
     public String manageInvites(Model model) {
         try {
             model.addAttribute("invitations", invitationRepository.findAll());
-            model.addAttribute("channels", channelService.getUpcomingChannels());  // Facultatif, si tu veux afficher les channels disponibles
-            model.addAttribute("users", userService.getAllUsers());  // Facultatif, si tu veux afficher les utilisateurs
 
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             model.addAttribute("username", auth.getName());
@@ -93,6 +91,18 @@ public class AdminController {
         } catch (Exception e) {
             logger.error("Erreur lors de l'accès à la gestion des invitations", e);
             return "error";
+        }
+    }
+
+    @DeleteMapping("/invites/{id}")
+    public String deleteInvitation(@PathVariable Long id, Model model) {
+        try {
+            invitationRepository.deleteById(id);
+            return "redirect:/admin/invites";
+        } catch (Exception e) {
+            logger.error("Erreur lors de la suppression du channel", e);
+            model.addAttribute("error", "Une erreur est survenue lors de la suppression du channel");
+            return "admin/invites";
         }
     }
 
@@ -216,7 +226,4 @@ public class AdminController {
             return "admin/users";
         }
     }
-
-    
-    
 } 
