@@ -53,12 +53,11 @@ public class InvitesRestController {
 
     @PostMapping("/{invitationId}/decline")
     public ResponseEntity<?> declineInvitation(
-            @PathVariable Long invitationId) {  // Le deuxième paramètre ajouté
+            @PathVariable Long invitationId) {
         try {
             // Appel du service pour refuser l'invitation
             userService.declineInvitation(invitationId);
 
-            // Si tout s'est bien passé, afficher un message de succès
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

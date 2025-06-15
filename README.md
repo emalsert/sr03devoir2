@@ -2,7 +2,7 @@
 
 ## Notes
 
-- 50h par personne dont 25 en TD
+- 50h par personne dont 25h en TD
 - BDD postgrest SQL
 - Springboot pour communiquer avec la BDD
 - Meaven, pom.xml, controller, restcontroller, websocket dans springboot (on l'aura déjà)
@@ -47,12 +47,15 @@ channel_id (int)
 ```
 
 ### Invitation
-Note : Lorsqu'elle est acceptée ou refusée, l'invitation est supprimée de cette table et le User_Channel est mis à jour (inséré en cas d'acceptation).
+Note :
+- Lorsqu'elle est refusée, l'invitation est supprimée de cette table.
+- Lorsqu'elle est acceptée, le status de l'invitation devient "accepted" et le User_Channel est inséré.
 
 ```
 invitation_id (int, PK, AI)
 user_id (int)
 channel_id (int)
+status (varchar)
 ```
 
 ## Interfaces
@@ -69,8 +72,7 @@ Via l'interface d'administration :
 
 Menu avec les liens suivants :
 - Accueil (liste des utilisateurs avec moyen de recherche, raccourcis édition, suppression, désactivation, réactivation)
-- Nouveau utilisateur : affiche un formulaire pour ajouter un nouveau
-  utilisateur
+- Nouveau utilisateur : affiche un formulaire pour ajouter un nouveau utilisateur
 - Filtres : Utilisateurs désactivés
 
 ### Utilisateur
@@ -92,10 +94,11 @@ Structuration de l'application en architecture single page (Composants React + A
 
 ### Chat
 
-Lorsque l'utilisateur clique sur un lien chat une nouvelle fenêtre est ouverte. Elle est composé d'un fil de discussion (TEXTAREA, ….) :
-- Liste de messages par ordre d'envoi
-- Formulaire pour modifier / créer un message (textarea)
-- Liste des utilisateurs connectés (sur la droite de la page)
+Lorsque l'utilisateur clique sur un lien chat une nouvelle fenêtre est ouverte.
+Elle est composé d'un fil de discussion (TEXTAREA) qui contient :
+- Une liste de messages par ordre d'envoi
+- Un formulaire pour modifier / créer un message (textarea)
+- Une liste des utilisateurs connectés (sur la droite de la page)
 
 ## Configuration de la Base de Données
 
@@ -106,12 +109,19 @@ Lorsque l'utilisateur clique sur un lien chat une nouvelle fenêtre est ouverte.
 - `DB_USER`: Nom d'utilisateur PostgreSQL (par défaut: postgres)
 - `DB_PASSWORD`: Mot de passe PostgreSQL (par défaut: your_secure_password)
 - `APP_PORT`: Port de l'application (par défaut: 8080)
+- `JWT_SECRET`: Clé secrète utilisée pour signer les tokens JWT (par défaut: changeme)
+- `SPRING_PROFILES_ACTIVE`: Profil Spring actif (par défaut: prod)
+- `MAIL_USERNAME`: Identifiant pour le service d’envoi d’e-mails
+- `MAIL_PASSWORD`: Mot de passe pour le service d’envoi d’e-mails
+- `REACT_APP_CLOUDINARY_CLOUD_NAME`: Nom du compte Cloudinary utilisé par le frontend
+- `REACT_APP_API_URL`: URL de l’API utilisée par le frontend (par défaut: http://167.86.109.247:8081/)
+- `URL_FRONTEND`: URL du frontend (par défaut: http://localhost:3000/)
 
 ## Gestion des Sessions
 
 ### Stockage des Sessions dans la Base de Données
-L'application utilise Spring Session JDBC pour stocker les sessions utilisateur dans la base de données PostgreSQL distante. Cette configuration offre plusieurs avantages :
-
+L'application utilise Spring Session JDBC pour stocker les sessions utilisateur dans la base de données PostgreSQL distante.
+Cette configuration offre plusieurs avantages :
 1. **Persistance des sessions** : Les sessions survivent aux redémarrages de l'application
 2. **Scalabilité** : Possibilité d'avoir plusieurs instances de l'application
 3. **Sécurité** : Meilleure gestion des sessions expirées
@@ -213,6 +223,8 @@ jwt.secret=${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367
 jwt.expiration=86400000
 ```
 
+Le JWT_SECRET peut être modifié proprement via les variables d'environnement.
+
 ### Authentification Admin
 
 L'interface d'administration utilise une authentification JWT via cookie :
@@ -226,8 +238,6 @@ L'API REST utilise JWT via le header Authorization :
 - Format : `Bearer <token>`
 - Les tokens expirent après 24h
 - Les routes publiques sont accessibles sans token
-
-
 
 ### Vérification de l'Authentification
 Pour vérifier si un utilisateur est connecté dans une vue Thymeleaf :
@@ -293,11 +303,14 @@ La déconnexion est implémentée en utilisant le formulaire de déconnexion de 
     .logoutSuccessUrl("/login?logout")
 ```
 
-#Lancer le projet 
-./gradlew bootRun
+# Lancer le projet
 
-//npm install avant
-npm run start
+## Gradlew
+- ./gradlew bootRun
+
+## React
+- npm install
+- npm run start
 
 ## Implémentation du Chat WebSocket
 

@@ -52,6 +52,7 @@ public class SecurityConfig {
                 // Toutes les autres routes
                 .anyRequest().authenticated()
             )
+            // Dans le cas ou l'utilisateur n'est pas connecté, le rediriger vers customAuthEntryPoint
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(customAuthEntryPoint)
             )
