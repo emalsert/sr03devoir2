@@ -16,4 +16,4 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     List<Invitation> findByChannel(Channel channel);
     Optional<Invitation> findByUserAndChannel(User user, Channel channel);
     boolean existsByUserAndChannel(User user, Channel channel);
-} 
+}

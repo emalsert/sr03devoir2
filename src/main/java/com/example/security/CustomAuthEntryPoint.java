@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-// Custom entry point to handle unauthenticated access attempts
+// Point d'entrée personnalisé pour gérer les tentatives d'accès non authentifié
 @Component
 public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
@@ -18,11 +18,11 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
         String accept = request.getHeader("Accept");
 
-        // Redirect to appropriate login page for HTML requests
+        // Redirection vers la page de connexion appropriée pour les requêtes HTML
         if (accept != null && accept.contains("text/html")) {
             response.sendRedirect("/admin/login");
         } else {
-            // For API clients, return 401 without redirect
+            // Pour les clients API, renvoyer 401 sans redirection
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
         }
     }
