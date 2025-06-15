@@ -99,10 +99,10 @@ class WebSocketService {
         }
     }
 
-    subscribeToChannel(channelId, onMessage) {
+    subscribeToChannel(channelId, userId, onMessage) {
         if (!this.client || !this.client.connected) {
             return this.connect().then(() => {
-                this.subscribeToChannel(channelId, onMessage);
+                this.subscribeToChannel(channelId, userId, onMessage);
             }).catch(error => {
                 console.error('Failed to connect and subscribe:', error);
                 throw error;
@@ -110,6 +110,7 @@ class WebSocketService {
         }
 
         try {
+            // S'abonner au broadcast du canal
             const subscription = this.client.subscribe(
                 `/topic/chat/${channelId}`,
                 (message) => {
@@ -118,11 +119,16 @@ class WebSocketService {
                         onMessage(parsedMessage);
                     } catch (error) {
                         console.error('Error parsing message:', error);
-                        // En cas d'erreur de parsing, on envoie le message brut
                         onMessage(message.body);
                     }
                 }
             );
+
+            // Publier la présence
+            this.client.publish({
+                destination: `/app/chat/${channelId}/join/${userId}`,
+                body: '' // ou JSON.stringify({ userId }) si tu veux
+            });
 
             this.subscriptions.set(channelId, subscription);
             this.messageHandlers.set(channelId, onMessage);
@@ -139,7 +145,7 @@ class WebSocketService {
             this.subscriptions.delete(channelId);
             this.messageHandlers.delete(channelId);
         }
-    }
+    }   
 
     sendMessage(channelId, content) {
         if (!this.client || !this.client.connected) {

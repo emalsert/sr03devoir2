@@ -91,11 +91,13 @@ const UserChannels = () => {
       await channelService.deleteChannel(channelToDelete.channelId);
       setShowDeleteModal(false);
       setChannelToDelete(null);
+      window.location.reload();
       } catch (err) {
         setError('Erreur lors de la suppression du canal');
         console.error('Error deleting channel:', err);
       setShowDeleteModal(false);
       setChannelToDelete(null);
+
     }
   };
 
@@ -103,7 +105,7 @@ const UserChannels = () => {
   const handleAccept = async (invitation) => {
     try {
       await invitationService.acceptInvitation(invitation.invitationId);
-      await loadUserInvitations(); // Recharger les invitations
+      window.location.reload();
     } catch (err) {
       setError('Erreur lors de l\'acceptation de l\'invitation');
       console.error('Error accepting invitation:', err);
@@ -146,7 +148,8 @@ const UserChannels = () => {
       setTimeout(() => {
         setCreateChannelAlert(null);
         setShowToast(false);
-      }, 2000);
+        window.location.reload();
+      }, 1500);
     } else {
       setTimeout(() => setShowToast(false), 2000);
     }
@@ -180,7 +183,8 @@ const UserChannels = () => {
                 const now = new Date();
                 const channelStart = new Date(channel.date);
                 const channelEnd = new Date(channelStart.getTime() + channel.durationMinutes * 60000);
-                const canJoin = now >= channelStart && now <= channelEnd;
+                const canJoin = now.getTime() >= channelStart.getTime() - 15*60000
+                             && now.getTime() <= channelEnd.getTime() + 15*60000;
 
                 return (
                   <Col key={channel.channelId} md={6} lg={4} className="mb-4">
@@ -244,6 +248,9 @@ const UserChannels = () => {
                     <Card className="ios-card">
                       <Card.Body>
                         <Card.Title>Channel ID: {invitation.channel.title}</Card.Title>
+                        <Card.Text>
+                          Date: {new Date(invitation.channel.date).toLocaleString().slice(0, 16)} - {invitation.channel.durationMinutes} min
+                        </Card.Text>
                         <Card.Text>
                           Invité par: {invitation.channel.owner.email}
                         </Card.Text>
@@ -346,7 +353,9 @@ const UserChannels = () => {
               setSelectedChannel(null);
             }}
             channel={selectedChannel}
-            onUpdate={loadUserChannels}
+            onUpdate={() => {
+              window.location.reload();
+            }}
         />
 
         {/* Modal de suppression de canal */}

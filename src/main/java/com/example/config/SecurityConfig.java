@@ -38,9 +38,7 @@ public class SecurityConfig {
                 // Routes publiques
                 .requestMatchers("/admin/login", "/login").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/channels/create").permitAll()  // Temporairement public pour les tests
-                .requestMatchers("/api/channels/").permitAll()
-                .requestMatchers("/api/invitations/").permitAll()
+                
                 .requestMatchers("/ws/**").permitAll()  // Autoriser les connexions WebSocket
 
                 // Routes admin

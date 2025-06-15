@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 /**
  * Composant qui écoute les événements de connexion/déconnexion WebSocket
@@ -27,6 +29,19 @@ public class WebSocketEventListener {
     // Exemple: /chat/123 -> groupe 1 = 123
     private static final Pattern CHANNEL_PATTERN = Pattern.compile("/chat/(\\d+)");
     private final UserService userService;
+
+    // Map sessionId -> ChannelUser
+    private final Map<String, ChannelUser> sessionIdToChannelAndUser = new ConcurrentHashMap<>();
+
+    // Petite classe utilitaire pour stocker channelId et userId
+    public static class ChannelUser {
+        public final Long channelId;
+        public final Long userId;
+        public ChannelUser(Long channelId, Long userId) {
+            this.channelId = channelId;
+            this.userId = userId;
+        }
+    }
 
     /**
      * Gère l'événement de connexion d'un utilisateur
@@ -50,7 +65,7 @@ public class WebSocketEventListener {
                 
                 try {
                 Long userId = userService.getUserId(username);
-                    chatWebSocketService.addUserToChannel(channelId, username, userId);
+                    chatWebSocketService.addUserToChannel(channelId, userId);
                     System.out.println("Utilisateur connecté au canal " + channelId + ": " + username);
                 } catch (IllegalArgumentException e) {
                     System.out.println("Erreur lors de l'ajout de l'utilisateur au canal: " + e.getMessage());
@@ -67,24 +82,16 @@ public class WebSocketEventListener {
      */
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        // Récupère les en-têtes de la session WebSocket
-        SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(event.getMessage());
-        String destination = headers.getDestination();
-        
-        if (destination != null) {
-            // Extrait l'ID du canal depuis la destination
-            Matcher matcher = CHANNEL_PATTERN.matcher(destination);
-            if (matcher.find()) {
-                Long channelId = Long.parseLong(matcher.group(1));
-                
-                // Utiliser SecurityContextHolder (alimenté par JwtAuthenticationFilter)
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                String username = auth != null ? auth.getName() : "anonymous";
-                
-                // Retire l'utilisateur du canal (sans session)
-                chatWebSocketService.removeUserFromChannel(channelId, username);
-                System.out.println("Utilisateur déconnecté du canal " + channelId + ": " + username);
-            }
+        String sessionId = event.getSessionId();
+        ChannelUser channelUser = sessionIdToChannelAndUser.remove(sessionId);
+        if (channelUser != null) {
+            chatWebSocketService.removeUserFromChannel(channelUser.channelId, channelUser.userId);
+            System.out.println("Utilisateur déconnecté du canal " + channelUser.channelId + ": " + channelUser.userId);
         }
+    }
+
+    // Méthode à appeler lors du join (depuis le controller)
+    public void registerSession(String sessionId, Long channelId, Long userId) {
+        sessionIdToChannelAndUser.put(sessionId, new ChannelUser(channelId, userId));
     }
 } 

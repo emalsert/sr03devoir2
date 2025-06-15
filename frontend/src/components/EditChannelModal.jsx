@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { channelService } from '../services/api';
 
+function toDatetimeLocal(date) {
+    const d = new Date(date);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+}
+
 const EditChannelModal = ({ show, handleClose, channel, onUpdate }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -13,7 +19,7 @@ const EditChannelModal = ({ show, handleClose, channel, onUpdate }) => {
         if (channel) {
             setTitle(channel.title);
             setDescription(channel.description);
-            setDateTime(new Date(channel.date).toISOString().slice(0, 16));
+            setDateTime(toDatetimeLocal(channel.date));
             setDurationMinutes(channel.durationMinutes);
         }
     }, [channel]);

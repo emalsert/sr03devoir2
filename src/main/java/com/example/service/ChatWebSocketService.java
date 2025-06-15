@@ -74,7 +74,7 @@ public class ChatWebSocketService {
                ALLOWED_DOCUMENT_TYPES.contains(contentType);
     }
 
-    public void addUserToChannel(Long channelId, String username, Long userId) {
+    public void addUserToChannel(Long channelId, Long userId) {
         // Vérification de l'existence du canal
         Channel channel = channelService.getChannelById(channelId)
             .orElseThrow(() -> new IllegalArgumentException("Channel pas trouvé"));
@@ -85,44 +85,46 @@ public class ChatWebSocketService {
             throw new IllegalArgumentException("L'utilisateur n'a pas été invité à ce salon");
         }
 
-        // Si toutes les vérifications sont passées, on peut ajouter l'utilisateur
+        // Ajout de l'utilisateur
         Set<String> channelUsers = channelSubscriptions.computeIfAbsent(channelId, k -> ConcurrentHashMap.newKeySet());
-        channelUsers.add(username);
+        channelUsers.add(userId.toString());
 
-        // Notification aux autres utilisateurs du canal
+        // Notification à tous les clients du canal (broadcast sur /topic)
         messagingTemplate.convertAndSend(
             "/topic/chat/" + channelId,
             Map.of(
                 "type", "USER_JOINED",
-                "username", username,
+                "userId", userId.toString(),
                 "connectedUsers", channelUsers
             )
         );
     }
 
-    public void removeUserFromChannel(Long channelId, String username) {
+    public void removeUserFromChannel(Long channelId, Long userId) {
         Set<String> channelUsers = channelSubscriptions.get(channelId);
         if (channelUsers != null) {
-            channelUsers.remove(username);
+            channelUsers.remove(userId.toString());
             if (channelUsers.isEmpty()) {
                 channelSubscriptions.remove(channelId);
             }
         }
 
-        // Notification aux autres utilisateurs du canal
+        // Notification à tous les clients du canal (broadcast sur /topic)
         messagingTemplate.convertAndSend(
             "/topic/chat/" + channelId,
             Map.of(
                 "type", "USER_LEFT",
-                "username", username
+                "userId", userId.toString(),
+                "connectedUsers", channelUsers != null ? channelUsers : Set.of()
             )
         );
     }
 
     public Map<String, String> getChannelUsers(Long channelId) {
-        Set<String> usernames = channelSubscriptions.getOrDefault(channelId, ConcurrentHashMap.newKeySet());
+        Set<String> users = channelSubscriptions.getOrDefault(channelId, ConcurrentHashMap.newKeySet());
+        System.out.println("users: " + users);
         Map<String, String> result = new ConcurrentHashMap<>();
-        usernames.forEach(username -> result.put(username, username));
+        users.forEach(userId -> result.put(userId, userId));
         return result;
     }
 } 

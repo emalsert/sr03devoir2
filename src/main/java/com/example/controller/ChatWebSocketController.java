@@ -23,6 +23,8 @@ import java.util.Map;
 import com.example.service.UserService;
 import com.example.service.JwtService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.example.event.WebSocketEventListener;
 
 @Controller
 @RequiredArgsConstructor
@@ -30,6 +32,8 @@ public class ChatWebSocketController {
     private final ChatWebSocketService chatWebSocketService;
     private final UserService userService;
     private final JwtService jwtService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketEventListener webSocketEventListener;
 
     @MessageMapping("/chat/{channelId}/send")
     public void sendMessage(
@@ -55,23 +59,11 @@ public class ChatWebSocketController {
         chatWebSocketService.sendTextMessageToChannel(channelId, message, username);
     }
 
-    @SubscribeMapping("/chat/{channelId}")
-    public Map<String, String> subscribeToChannel(
-            @DestinationVariable Long channelId,
-            SimpMessageHeaderAccessor headerAccessor) {
-        
-        // Utiliser SecurityContextHolder (alimenté par JwtAuthenticationFilter)
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth != null ? auth.getName() : "anonymous";
-        
-        // Récupérer l'ID de l'utilisateur
-        Long userId = userService.getUserId(username);
-        
-        // Ajouter l'utilisateur au canal
-        chatWebSocketService.addUserToChannel(channelId, username, userId);
-        
-        // Retourner la liste des utilisateurs connectés au canal
-        return chatWebSocketService.getChannelUsers(channelId);
+    @MessageMapping("/chat/{channelId}/join/{userId}")
+    public void joinChannel(@DestinationVariable Long channelId, @DestinationVariable Long userId, SimpMessageHeaderAccessor headerAccessor) {
+        String sessionId = headerAccessor.getSessionId();
+        webSocketEventListener.registerSession(sessionId, channelId, userId);
+        chatWebSocketService.addUserToChannel(channelId, userId);
     }
 
     @PostMapping("/api/chat/{channelId}/file")
@@ -92,13 +84,15 @@ public class ChatWebSocketController {
         chatWebSocketService.sendFileToChannel(channelId, file, username);
     }
 
-    // Cette méthode sera appelée automatiquement quand un utilisateur se déconnecte
-    public void handleDisconnect(Long channelId, String username) {
-        chatWebSocketService.removeUserFromChannel(channelId, username);
-    }
-
+    // Retourner la liste des utilisateurs connectés au canal
     @GetMapping("/api/chat/{channelId}/users")
     public ResponseEntity<Map<String, String>> getChannelUsers(@PathVariable Long channelId) {
         return ResponseEntity.ok(chatWebSocketService.getChannelUsers(channelId));
     }
+
+    // Cette méthode sera appelée automatiquement quand un utilisateur se déconnecte
+    public void handleDisconnect(Long channelId, Long userId) {
+        chatWebSocketService.removeUserFromChannel(channelId, userId);
+    }
+
 } 

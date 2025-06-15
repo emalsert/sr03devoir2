@@ -30,6 +30,12 @@ public class UserRestController {
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable Long userId) {
+        return userService.getUserById(userId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @PutMapping("/{userId}/edit")
     public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User user) {

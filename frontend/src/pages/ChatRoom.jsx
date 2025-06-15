@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Card, Form, Button, ListGroup, Alert, Modal } from 'react-bootstrap';
-import { channelService } from '../services/api';
+import { channelService, userService } from '../services/api';
 import { websocketService } from '../services/websocketService';
 import { useAuth } from '../contexts/AuthContext';
 import LottieLoader from '../components/LottieLoader';
+import { AdvancedImage } from '@cloudinary/react';
+import { getCloudinaryImage } from '../services/cloudinaryService';
 
 function ChatRoom() {
   const { channelId } = useParams();
@@ -17,18 +19,36 @@ function ChatRoom() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [usersConnected, setUsersConnected] = useState([]);
+  const [connectedUserInfos, setConnectedUserInfos] = useState({});
+  const [notifications, setNotifications] = useState([]);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     loadChannel();
     connectWebSocket();
-    getChannelUsers();
     return () => {
       websocketService.unsubscribeFromChannel(channelId);
       websocketService.disconnect();
     };
   }, [channelId]);
+
+  useEffect(() => {
+    // Quand usersConnected change, on charge les infos
+    const fetchUsers = async () => {
+      const infos = {};
+      for (const userId of usersConnected) {
+        try {
+          const user = await userService.getUserById(userId);
+          infos[userId] = user;
+        } catch (e) {
+          infos[userId] = { firstName: 'Inconnu', lastName: '' };
+        }
+      }
+      setConnectedUserInfos(infos);
+    };
+    if (usersConnected.length > 0) fetchUsers();
+  }, [usersConnected]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,9 +71,8 @@ function ChatRoom() {
   const connectWebSocket = async () => {
     try {
       await websocketService.connect();
-      websocketService.subscribeToChannel(channelId, (message) => {
+      websocketService.subscribeToChannel(channelId, user.userId, (message) => {
         if (typeof message === 'string') {
-          // Message simple - ce cas ne devrait plus arriver car tous les messages sont maintenant des objets JSON
           setMessages(prev => [...prev, { 
             type: 'TEXT',
             content: message, 
@@ -62,7 +81,6 @@ function ChatRoom() {
           }]);
         } else if (message && typeof message === 'object') {
           if (message.type === 'TEXT') {
-            // Message texte
             setMessages(prev => [...prev, {
               type: 'TEXT',
               content: message.content || '',
@@ -70,7 +88,6 @@ function ChatRoom() {
               timestamp: new Date(message.timestamp || Date.now())
             }]);
           } else if (message.type === 'FILE') {
-            // Message avec fichier
             const fileData = websocketService.displayFile(message);
             if (fileData) {
               setMessages(prev => [...prev, {
@@ -80,6 +97,8 @@ function ChatRoom() {
                 timestamp: new Date(message.timestamp || Date.now())
               }]);
             }
+          } else if (message.type === 'USER_JOINED' || message.type === 'USER_LEFT') {
+            setUsersConnected(Array.from(message.connectedUsers || []));
           }
         }
       });
@@ -89,20 +108,6 @@ function ChatRoom() {
     }
   };
 
-  const getChannelUsers = async () => {
-    try {
-    const users = await websocketService.getChannelUsers(channelId);
-    setUsersConnected(users);
-    console.log(users);
-    
-    // Refresh every 2 seconds
-    setTimeout(() => {
-        getChannelUsers();
-      }, 10000);
-    } catch (error) {
-      console.error('Error getting channel users:', error);
-    }
-  };
 
 
   const handleSendMessage = async (e) => {
@@ -226,9 +231,7 @@ function ChatRoom() {
               <h3 className="mb-0">{channel?.title || ''}</h3>
               <p className="mb-0">{channel?.description || ''}</p>
             </div>
-            <div>
-              <p className="mb-0">Utilisateurs connectés: {usersConnected.length}</p>
-            </div>
+            
           </div>
         </Card.Header>
         
@@ -239,45 +242,70 @@ function ChatRoom() {
         )}
 
         <Card.Body>
-          <div className="chat-container mb-3">
-            {messages.map((msg, index) => renderMessage(msg, index))}
-            <div ref={messagesEndRef} />
-          </div>
+          <div className="row">
+            <div className="col-md-9 mb-3">
+              <div className="chat-container mb-3">
+                {messages.map((msg, index) => renderMessage(msg, index))}
+                <div ref={messagesEndRef} />
+              </div>
 
-          <Form onSubmit={handleSendMessage}>
-            <div className="d-flex">
-              <Form.Control
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Tapez votre message..."
-                disabled={!websocketService.isConnected()}
-              />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-                accept=".jpg,.jpeg,.png,.gif,.pdf"
-              />
-              <Button
-                variant="outline-secondary"
-                className="ms-2"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!websocketService.isConnected()}
-              >
-                Fichier
-              </Button>
-              <Button 
-                type="submit" 
-                variant="primary" 
-                className="ms-2"
-                disabled={!websocketService.isConnected()}
-              >
-                Envoyer
-              </Button>
+              <Form onSubmit={handleSendMessage}>
+                <div className="d-flex">
+                  <Form.Control
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Tapez votre message..."
+                    disabled={!websocketService.isConnected()}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                    accept=".jpg,.jpeg,.png,.gif,.pdf"
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    className="ms-2"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!websocketService.isConnected()}
+                  >
+                    Fichier
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    className="ms-2"
+                    disabled={!websocketService.isConnected()}
+                  >
+                    Envoyer
+                  </Button>
+                </div>
+              </Form>
             </div>
-          </Form>
+            <div className="col-md-3">
+              <Card>
+                <Card.Header>Utilisateurs connectés</Card.Header>
+                <ListGroup variant="flush">
+                  {usersConnected.length === 0 && (
+                    <ListGroup.Item>Aucun utilisateur connecté</ListGroup.Item>
+                  )}
+                  {usersConnected.map((userId, idx) => {
+                    const user = connectedUserInfos[userId];
+                    let avatarPublicId = user && user.avatar ? user.avatar : 'cat-chat_ua94gz';
+                    const img = getCloudinaryImage(avatarPublicId, 40, 40);
+                    return (
+                      <ListGroup.Item key={userId || idx} className="d-flex align-items-center">
+                        <AdvancedImage cldImg={img} style={{ width: 40, height: 40, borderRadius: '5%', objectFit: 'cover', marginRight: 10 }} />
+                        <span>{user ? `${user.firstName} ${user.lastName}` : userId}</span>
+                      </ListGroup.Item>
+                    );
+                  })}
+                </ListGroup>
+              </Card>
+            </div>
+          </div>
         </Card.Body>
       </Card>
 

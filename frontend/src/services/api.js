@@ -95,6 +95,10 @@ export const userService = {
         const response = await api.get('/api/users');
         return response.data;
     },
+    getUserById: async (userId) => {
+        const response = await api.get(`/api/users/${userId}`);
+        return response.data;
+    },
     updateUser: async (userId, user) => {
         const response = await api.put(`/api/users/${userId}/edit`, user);
         return response.data;

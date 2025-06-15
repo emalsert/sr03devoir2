@@ -4,13 +4,16 @@ import { Nav, Container, Button } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 import Logout from './Logout';
 import EditUserModal from './EditUserModal';
+import { AdvancedImage } from '@cloudinary/react';
+import { getCloudinaryImage } from '../services/cloudinaryService';
 
 const Navigation = () => {
-    const { user, loading } = useAuth();
+    const { user, loading, setUser } = useAuth();
     const [showEditUserModal, setShowEditUserModal] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handleUserUpdate = () => {
+        window.location.reload();
         setShowEditUserModal(false);
     };
 
@@ -57,7 +60,15 @@ const Navigation = () => {
                     <div className="user-info">
                         <i className="fas fa-user ms-2"></i>
                         {user.email}
-                        <Button className="btn-primary ms-2 mt-1" onClick={() => setShowEditUserModal(true)}>Modifier</Button>
+                        {(
+                            <div className="mt-2 ms-2">
+                                <AdvancedImage 
+                                    cldImg={getCloudinaryImage(user.avatar ? user.avatar : 'cat-chat_ua94gz', 50, 50)} 
+                                    style={{ width: 50, height: 50, borderRadius: '5%', objectFit: 'cover' }}
+                                />
+                            </div>
+                        )}
+                        <Button className="btn-primary ms-2 mt-2" onClick={() => setShowEditUserModal(true)}>Modifier</Button>
                         <EditUserModal show={showEditUserModal} handleClose={() => setShowEditUserModal(false)} user={user} onUpdate={handleUserUpdate} />
                     </div>
                     <Logout />

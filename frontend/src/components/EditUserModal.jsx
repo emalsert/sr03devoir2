@@ -12,7 +12,6 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
     const [lastName, setLastName] = useState(user.lastName);
     const [avatar, setAvatar] = useState(user.avatar);
     const [email, setEmail] = useState(user.email);
-    const [password, setPassword] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,7 +21,6 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
                 firstName,
                 lastName,
                 email,
-                password,
                 avatar
             });
             onUpdate();
@@ -44,15 +42,13 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
     };
 
     const renderAvatar = () => {
-        if (avatar) {
-            const img = getCloudinaryImage(avatar, 100, 100);
-            return (
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                    <AdvancedImage cldImg={img} style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover' }} />
-                </div>
-            );
-        }
-        return <div style={{ height: 100 }} />;
+        const publicId = avatar ? avatar : 'cat-chat_ua94gz';
+        const img = getCloudinaryImage(publicId, 100, 100);
+        return (
+            <div className="d-flex justify-content-center">
+                <AdvancedImage cldImg={img} style={{ width: 140, height: 140, borderRadius: '4%', objectFit: 'cover' }} />
+            </div>
+        );
     };
 
     return (
@@ -62,7 +58,7 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
             </Modal.Header>
             <Modal.Body>
                 <Form onSubmit={handleSubmit}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className="d-flex align-items-center">
                         <div>
                             <Form.Group controlId="firstName">
                                 <Form.Label>Prénom</Form.Label>
@@ -73,19 +69,12 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
                                 <Form.Control type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                             </Form.Group>
                         </div>
-                        <div className="ml-3">
+                        <div className="m-auto">
                             {renderAvatar()}
                         </div>
                     </div>
                     
-                    <Form.Group controlId="firstName">
-                        <Form.Label>Prénom</Form.Label>
-                        <Form.Control type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                    </Form.Group>
-                    <Form.Group controlId="lastName">
-                        <Form.Label>Nom</Form.Label>
-                        <Form.Control type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                    </Form.Group>
+                    
                     <Form.Group controlId="avatar">
                         <Form.Label>Avatar</Form.Label>
                         <Form.Control
@@ -99,10 +88,6 @@ const EditUserModal = ({ show, handleClose, user, onUpdate }) => {
                     <Form.Group controlId="email">
                         <Form.Label>Email</Form.Label>
                         <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </Form.Group>
-                    <Form.Group controlId="password">
-                        <Form.Label>Mot de passe</Form.Label>
-                        <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     </Form.Group>
                     <Button className="mt-3" variant="primary" type="submit">
                         Enregistrer

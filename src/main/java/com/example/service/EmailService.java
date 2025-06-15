@@ -48,7 +48,7 @@ public class EmailService {
             • Plateforme : PowerChat
 
             🔗 Pour accepter cette invitation, cliquez sur le lien suivant :
-            http://%s:3000
+            http://%s:3001
 
             📱 Une fois connecté(e), vous pourrez :
             • Rejoindre le canal

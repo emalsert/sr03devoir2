@@ -227,10 +227,10 @@ public class UserService {
         // Vérifie si l'invitation existe déjà
         Invitation invitationTemp = invitationRepository.findByUserAndChannel(user, channel).orElse(null);
         if (invitationTemp != null && invitationTemp.getStatus().equals("pending")) {
-            throw new IllegalArgumentException("Invitation est deja en attente");
+            throw new IllegalArgumentException("Invitation est déjà en attente");
         }
         if (invitationTemp != null && invitationTemp.getStatus().equals("accepted")) {
-            throw new IllegalArgumentException("Invitation est deja acceptee");
+            throw new IllegalArgumentException("Invitation est déjà acceptée");
         }
 
         // Crée et sauvegarde l'invitation
