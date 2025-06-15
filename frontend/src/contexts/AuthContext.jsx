@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, isAuthenticated } from '../services/api';
 
+// Contexte d'authentification : gestion de l'utilisateur connecté et du chargement
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {

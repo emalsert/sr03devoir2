@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Contrôleur pour la gestion des invitations côté client (RestController API)
+ * Gère les requêtes de gestion des invitations
+ */
 @RestController
 @RequestMapping("/api/invitations")
 public class InvitesRestController {
@@ -37,6 +41,11 @@ public class InvitesRestController {
         }
     }
 
+    /**
+     * Accepte une invitation
+     * @param invitationId Identifiant de l'invitation
+     * @return la réponse HTTP
+     */
     @PostMapping("/{invitationId}/accept")
     public ResponseEntity<?> acceptInvitation(
             @PathVariable Long invitationId) {
@@ -51,6 +60,11 @@ public class InvitesRestController {
         }
     }
 
+    /**
+     * Refuse une invitation
+     * @param invitationId Identifiant de l'invitation
+     * @return la réponse HTTP
+     */
     @PostMapping("/{invitationId}/decline")
     public ResponseEntity<?> declineInvitation(
             @PathVariable Long invitationId) {
@@ -64,6 +78,13 @@ public class InvitesRestController {
         }
     }
 
+    /**
+     * Envoie une invitation
+     * @param userId Identifiant de l'utilisateur
+     * @param channelId Identifiant du canal
+     * @param inviterId Identifiant de l'utilisateur qui envoie l'invitation
+     * @return la réponse HTTP
+     */
     @PostMapping("/invite")
     public ResponseEntity<?> sendInvitation(
             @RequestParam Long userId,

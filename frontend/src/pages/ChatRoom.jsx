@@ -8,6 +8,8 @@ import LottieLoader from '../components/LottieLoader';
 import { AdvancedImage } from '@cloudinary/react';
 import { getCloudinaryImage } from '../services/cloudinaryService';
 
+// Composant principal de la salle de chat (messages, fichiers, utilisateurs connectés)
+// Gère la connexion WebSocket, l'affichage des messages et la gestion des fichiers
 function ChatRoom() {
   const { channelId } = useParams();
   const { user } = useAuth();
@@ -107,8 +109,6 @@ function ChatRoom() {
       setError('Failed to connect to chat');
     }
   };
-
-
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

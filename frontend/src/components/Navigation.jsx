@@ -7,6 +7,7 @@ import EditUserModal from './EditUserModal';
 import { AdvancedImage } from '@cloudinary/react';
 import { getCloudinaryImage } from '../services/cloudinaryService';
 
+// Barre latérale de navigation (liens, avatar utilisateur, déconnexion)
 const Navigation = () => {
     const { user, loading, setUser } = useAuth();
     const [showEditUserModal, setShowEditUserModal] = useState(false);

@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+// Service centralisé pour les appels API (utilisateurs, canaux, auth, invitations)
+
 export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const api = axios.create({

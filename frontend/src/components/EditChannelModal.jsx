@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Alert } from 'react-bootstrap';
 import { channelService } from '../services/api';
 
+// Modal pour éditer les informations d'un canal (titre, description, date, durée)
+
 function toDatetimeLocal(date) {
     const d = new Date(date);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());

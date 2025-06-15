@@ -63,6 +63,8 @@ function AppRoutes() {
     );
 }
 
+// Point d'entrée principal de l'application React
+// Définit les routes et la protection d'accès selon l'authentification
 function App() {
     return (
         <Router>

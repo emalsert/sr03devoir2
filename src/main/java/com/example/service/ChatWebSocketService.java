@@ -14,6 +14,10 @@ import java.util.Base64;
 import java.io.IOException;
 import java.util.HashMap;
 
+/**
+ * Service pour la gestion des WebSockets, on utilise le SimpMessagingTemplate pour envoyer les messages aux clients
+ * Gère les messages de chat, les fichiers et les utilisateurs connectés
+ */
 @Service
 @RequiredArgsConstructor
 public class ChatWebSocketService {
@@ -28,6 +32,11 @@ public class ChatWebSocketService {
     private static final List<String> ALLOWED_DOCUMENT_TYPES = List.of("application/pdf");
     private static final int MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+    /**
+     * Envoie un message de chat à un canal
+     * On envoie un message de type TEXT, on envoie le sender, le contenu et la date
+     * il sera reçu par tous les clients connectés au canal
+     */
     public void sendTextMessageToChannel(Long channelId, String message, String username) {
         Map<String, Object> textMessage = new HashMap<>();
         textMessage.put("type", "TEXT");
@@ -69,11 +78,23 @@ public class ChatWebSocketService {
         messagingTemplate.convertAndSend(destination, fileMessage);
     }
 
+    /**
+     * Vérifie si le type de fichier est autorisé
+     * @param contentType Type de fichier
+     * @return true si le type de fichier est autorisé, false sinon
+     */
     private boolean isFileTypeAllowed(String contentType) {
         return ALLOWED_IMAGE_TYPES.contains(contentType) || 
                ALLOWED_DOCUMENT_TYPES.contains(contentType);
     }
 
+    /**
+     * Ajoute un utilisateur à un canal, on vérifie que l'utilisateur a été invité au canal
+     * et que l'utilisateur n'est pas déjà connecté à ce canal, on pourra ensuite envoyer un message de type USER_JOINED
+     * à tous les clients connectés au canal
+     * @param channelId Identifiant du canal
+     * @param userId Identifiant de l'utilisateur
+     */
     public void addUserToChannel(Long channelId, Long userId) {
         // Vérification de l'existence du canal
         Channel channel = channelService.getChannelById(channelId)
@@ -100,6 +121,12 @@ public class ChatWebSocketService {
         );
     }
 
+    /**
+     * Supprime un utilisateur d'un canal, on vérifie que l'utilisateur est connecté à ce canal
+     * et on envoie un message de type USER_LEFT à tous les clients connectés au canal
+     * @param channelId Identifiant du canal
+     * @param userId Identifiant de l'utilisateur
+     */
     public void removeUserFromChannel(Long channelId, Long userId) {
         Set<String> channelUsers = channelSubscriptions.get(channelId);
         if (channelUsers != null) {
@@ -120,6 +147,11 @@ public class ChatWebSocketService {
         );
     }
 
+    /**
+     * Récupère les utilisateurs connectés à un canal (plus utilisée)
+     * @param channelId Identifiant du canal
+     * @return la liste des utilisateurs connectés au canal
+     */
     public Map<String, String> getChannelUsers(Long channelId) {
         Set<String> users = channelSubscriptions.getOrDefault(channelId, ConcurrentHashMap.newKeySet());
         System.out.println("users: " + users);

@@ -16,6 +16,10 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.time.Duration;
 
+/**
+ * Contrôleur pour la gestion des administrateurs
+ * Gère les requêtes de gestion des utilisateurs, des canaux et des invitations
+ */
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -25,6 +29,12 @@ public class AdminController {
     private final ChannelService channelService;
     private final InvitationRepository invitationRepository;
 
+    /**
+     * Constructeur pour initialiser les services
+     * @param userService Service pour la gestion des utilisateurs
+     * @param channelService Service pour la gestion des canaux
+     * @param invitationRepository Service pour la gestion des invitations
+     */
     @Autowired
     public AdminController(
             UserService userService,
@@ -36,6 +46,11 @@ public class AdminController {
         this.invitationRepository = invitationRepository;
     }
 
+    /**
+     * Page de tableau de bord pour les administrateurs
+     * @param model Modèle pour la vue
+     * @return la page de tableau de bord
+     */
     @GetMapping
     public String adminDashboard(Model model) {
         try {
@@ -48,6 +63,11 @@ public class AdminController {
         }
     }
 
+    /**
+     * Page de gestion des utilisateurs
+     * @param model Modèle pour la vue
+     * @return la page de gestion des utilisateurs
+     */
     @GetMapping("/users")
     public String manageUsers(Model model) {
         try {
@@ -63,6 +83,11 @@ public class AdminController {
         }
     }
 
+    /**
+     * Page de gestion des canaux
+     * @param model Modèle pour la vue
+     * @return la page de gestion des canaux
+     */
     @GetMapping("/channels")
     public String manageChannels(Model model) {
         try {
@@ -79,6 +104,11 @@ public class AdminController {
         }
     }
 
+    /**
+     * Page de gestion des invitations
+     * @param model Modèle pour la vue
+     * @return la page de gestion des invitations
+     */
     @GetMapping("/invites")
     public String manageInvites(Model model) {
         try {
@@ -94,6 +124,12 @@ public class AdminController {
         }
     }
 
+    /**
+     * Suppression d'une invitation
+     * @param id Identifiant de l'invitation
+     * @param model Modèle pour la vue
+     * @return la page de gestion des invitations
+     */
     @DeleteMapping("/invites/{id}")
     public String deleteInvitation(@PathVariable Long id, Model model) {
         try {
@@ -106,11 +142,25 @@ public class AdminController {
         }
     }
 
+    /**
+     * Page de test
+     * @return la page de test
+     */
     @GetMapping("/test")
     public String testPage() {
         return "admin/test";
     }
 
+    /**
+     * Création d'un canal
+     * @param title Titre du canal
+     * @param description Description du canal
+     * @param date Date de début du canal
+     * @param durationMinutes Durée du canal en minutes
+     * @param ownerId Identifiant de l'utilisateur propriétaire du canal
+     * @param model Modèle pour la vue
+     * @return la page de gestion des canaux
+     */
     @PostMapping("/channels")
     public String createChannel(
             @RequestParam("title") String title,
@@ -141,6 +191,16 @@ public class AdminController {
         }
     }
 
+    /**
+     * Mise à jour d'un canal
+     * @param id Identifiant du canal
+     * @param title Titre du canal
+     * @param description Description du canal
+     * @param date Date de début du canal
+     * @param durationMinutes Durée du canal en minutes
+     * @param model Modèle pour la vue
+     * @return la page de gestion des canaux
+     */
     @PutMapping("/channels/{id}")
     public String updateChannel(
         @PathVariable Long id,
@@ -159,6 +219,12 @@ public class AdminController {
         }
     }
 
+    /**
+     * Suppression d'un canal
+     * @param id Identifiant du canal
+     * @param model Modèle pour la vue
+     * @return la page de gestion des canaux
+     */
     @DeleteMapping("/channels/{id}")
     public String deleteChannel(@PathVariable Long id, Model model) {
         try {
@@ -172,6 +238,16 @@ public class AdminController {
     }
 
 
+    /**
+     * Création d'un utilisateur
+     * @param firstName Prénom de l'utilisateur
+     * @param lastName Nom de l'utilisateur
+     * @param email Adresse email de l'utilisateur
+     * @param password Mot de passe de l'utilisateur
+     * @param isAdmin Indique si l'utilisateur est administrateur
+     * @param model Modèle pour la vue
+     * @return la page de gestion des utilisateurs
+     */
     @PostMapping("/users")
     public String createUser(
             @RequestParam("firstName") String firstName,
@@ -195,6 +271,12 @@ public class AdminController {
         }
     }
 
+    /**
+     * Suppression d'un utilisateur
+     * @param id Identifiant de l'utilisateur
+     * @param model Modèle pour la vue
+     * @return la page de gestion des utilisateurs
+     */
     @GetMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable("id") Long id, Model model) {
         try {
@@ -207,7 +289,18 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/users/{id}")
+    /**
+     * Mise à jour d'un utilisateur
+     * @param id Identifiant de l'utilisateur
+     * @param firstName Prénom de l'utilisateur
+     * @param lastName Nom de l'utilisateur
+     * @param email Adresse email de l'utilisateur
+     * @param isAdmin Indique si l'utilisateur est administrateur
+     * @param avatar Avatar de l'utilisateur
+     * @param model Modèle pour la vue
+     * @return la page de gestion des utilisateurs
+     */
+    @PutMapping("/users/{id}")  
     public String updateUser(
         @PathVariable Long id,
         @RequestParam("firstName") String firstName,

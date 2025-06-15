@@ -3,6 +3,7 @@ import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import RegisterForm from '../components/auth/RegisterForm';
 
+// Page d'inscription utilisateur
 const Register = () => {
     return (
         <Container className="py-5">

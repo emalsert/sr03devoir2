@@ -4,6 +4,7 @@ import { Form, Button, Alert } from 'react-bootstrap';
 import { channelService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
+// Formulaire de création de canal (titre, description, date, durée)
 const CanalForm = ({ onChannelCreated }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

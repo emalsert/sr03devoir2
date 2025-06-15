@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Contrôleur pour la gestion de l'authentification côté client (RestController API)
+ * Gère les requêtes de connexion, de déconnexion et de gestion des utilisateurs
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -25,6 +29,10 @@ public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
 
+    /**
+     * Récupère les informations de l'utilisateur connecté
+     * @return l'utilisateur connecté
+     */
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
@@ -43,6 +51,12 @@ public class AuthController {
         }
     }
 
+    /**
+     * Connexion d'un utilisateur
+     * @param request Requête de connexion
+     * @param response Réponse HTTP
+     * @return l'utilisateur connecté
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
         try {
@@ -75,6 +89,12 @@ public class AuthController {
         }
     }
 
+    /**
+     * Inscription d'un utilisateur
+     * @param request Requête d'inscription
+     * @param response Réponse HTTP
+     * @return l'utilisateur inscrit
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletResponse response) {
         try {
@@ -109,6 +129,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * Déconnexion d'un utilisateur
+     * @param response Réponse HTTP
+     * @return la réponse HTTP
+     */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         // Supprimer le cookie JWT

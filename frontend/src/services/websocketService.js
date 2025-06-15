@@ -3,6 +3,7 @@ import { Client } from '@stomp/stompjs';
 import { useAuth } from '../contexts/AuthContext';
 import { API_URL } from './api';
 
+// Service pour la gestion WebSocket : connexion, messages, fichiers, présence utilisateurs
 class WebSocketService {
     constructor() {
         this.client = null;

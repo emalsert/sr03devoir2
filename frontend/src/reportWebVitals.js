@@ -1,3 +1,4 @@
+// Permet de mesurer les performances de l'application React (optionnel)
 const reportWebVitals = (onPerfEntry) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {

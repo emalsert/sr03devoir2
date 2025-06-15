@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * Contrôleur pour la gestion de l'authentification des administrateurs
+ * Gère les requêtes de connexion, de déconnexion et de gestion du tableau de bord
+ */
 @Controller
 public class AdminAuthController {
 
@@ -25,6 +29,13 @@ public class AdminAuthController {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+    /**
+     * Constructeur pour initialiser les services
+     * @param authenticationManager Gestionnaire d'authentification
+     * @param userService Service pour la gestion des utilisateurs
+     * @param jwtService Service pour la gestion des tokens JWT
+     * @param userDetailsService Service pour charger les détails utilisateur
+     */
     public AdminAuthController(
             AuthenticationManager authenticationManager,
             UserService userService,
@@ -36,6 +47,10 @@ public class AdminAuthController {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Page de connexion pour les administrateurs
+     * @return la page de connexion
+     */
     @GetMapping("/admin/login")
     public String loginPage() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -45,6 +60,13 @@ public class AdminAuthController {
         return "admin/login";
     }
 
+    /**
+     * Traitement de la connexion pour les administrateurs
+     * @param username Nom d'utilisateur
+     * @param password Mot de passe
+     * @param response Réponse HTTP
+     * @return la page de tableau de bord ou la page de connexion en cas d'erreur
+     */
     @PostMapping("/admin/login")
     public String login(@RequestParam String username, 
                        @RequestParam String password,
@@ -77,6 +99,11 @@ public class AdminAuthController {
         }
     }
 
+    /**
+     * Page de tableau de bord pour les administrateurs
+     * @param model Modèle pour la vue
+     * @return la page de tableau de bord
+     */
     @GetMapping("/admin/dashboard")
     public String dashboard(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -84,6 +111,11 @@ public class AdminAuthController {
         return "admin/dashboard";
     }
 
+    /**
+     * Traitement de la déconnexion pour les administrateurs
+     * @param response Réponse HTTP
+     * @return la page de connexion avec un message de déconnexion
+     */
     @GetMapping("/admin/logout")
     public String logout(HttpServletResponse response) {
         // Supprimer le cookie JWT

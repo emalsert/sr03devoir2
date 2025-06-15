@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
+// Bouton de déconnexion utilisateur
 const Logout = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();

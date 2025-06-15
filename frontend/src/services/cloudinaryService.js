@@ -6,6 +6,8 @@ import axios from 'axios';
 const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dskh9cxw4';
 const cld = new Cloudinary({ cloud: { cloudName } });
 
+// Service pour l'intégration Cloudinary (upload et récupération d'images)
+
 export function getCloudinaryImage(publicId, width = 500, height = 500) {
   return cld
     .image(publicId)

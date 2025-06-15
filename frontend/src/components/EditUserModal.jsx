@@ -1,4 +1,4 @@
-//Modal pour modifier les informations d'un utilisateur
+// Modal pour éditer les informations utilisateur (nom, email, avatar)
 
 import React, { useState } from 'react';
 import { Modal, Form, Button } from 'react-bootstrap';

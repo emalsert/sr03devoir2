@@ -7,6 +7,11 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.Properties;
+
+/**
+ * Service pour la gestion des emails
+ * Gère l'envoi d'emails
+ */
 @Service
 public class EmailService {
 

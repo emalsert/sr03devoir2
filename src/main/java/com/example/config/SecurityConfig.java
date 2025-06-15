@@ -17,13 +17,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuration de la sécurité pour l'application
+ * Définit les filtres d'authentification, les fournisseurs d'authentification
+ * et les autorisations pour les différentes routes
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    /**
+     * Filtre d'authentification JWT pour Spring Security
+     */
     private final JwtAuthenticationFilter jwtAuthFilter;
+
+    /**
+     * Service pour charger les détails utilisateur
+     */
     private final UserDetailsService userDetailsService;
+
+    /**
+     * Point d'entrée personnalisé pour la gestion des erreurs d'authentification
+     */
     private final CustomAuthEntryPoint customAuthEntryPoint;
 
     @Bean

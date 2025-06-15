@@ -3,6 +3,7 @@ import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm';
 
+// Page de connexion utilisateur
 const Login = () => {
     return (
         <Container className="py-5">

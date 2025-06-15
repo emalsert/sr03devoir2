@@ -17,6 +17,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service pour la gestion des canaux
+ * Gère les opérations de base sur les canaux qui sont utilisées dans le controller
+ */
 @Service
 @Transactional
 public class ChannelService {
@@ -38,6 +42,10 @@ public class ChannelService {
         this.invitationRepository = invitationRepository;
     }
 
+    /**
+     * Crée un canal en faisant les vérifications nécessaires
+     * @return le canal créé
+     */
     public Channel createChannel(String title, String description, LocalDateTime date, Integer durationMinutes, Long ownerId) {
         // Validation des champs obligatoires
         if (title == null || title.trim().isEmpty()) {

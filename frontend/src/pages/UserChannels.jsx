@@ -8,6 +8,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LottieLoader from '../components/LottieLoader';
 
+// Page principale pour gérer les canaux de l'utilisateur, invitations et actions associées
 const UserChannels = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');

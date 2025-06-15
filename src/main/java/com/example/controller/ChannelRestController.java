@@ -10,6 +10,10 @@ import com.example.service.JwtService;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Contrôleur pour la gestion des canaux côté client (RestController API)
+ * Gère les requêtes de gestion des canaux
+ */
 @RestController
 @RequestMapping("/api/channels")
 public class ChannelRestController {
@@ -20,11 +24,24 @@ public class ChannelRestController {
     @Autowired
     private JwtService jwtService;
 
+    /**
+     * Récupère la liste des canaux à venir
+     * @return la liste des canaux à venir
+     */
     @GetMapping
     public ResponseEntity<List<Channel>> getUpcomingChannels() {
         return ResponseEntity.ok(channelService.getUpcomingChannels());
     }
 
+    /**
+     * Crée un canal
+     * @param title Titre du canal
+     * @param description Description du canal
+     * @param date Date de début du canal
+     * @param durationMinutes Durée du canal en minutes
+     * @param ownerId Identifiant de l'utilisateur propriétaire du canal
+     * @return le canal créé
+     */
     @PostMapping("/create")
     public ResponseEntity<?> createChannel(
             @RequestParam String title,
@@ -33,12 +50,6 @@ public class ChannelRestController {
             @RequestParam int durationMinutes,
             @RequestParam Long ownerId) {
         try {
-            /*on vérifie que la date est dans le futur
-            System.out.println(date);
-            System.out.println(LocalDateTime.now());
-            if (date.isBefore(LocalDateTime.now().plusMinutes(10))) {
-                return ResponseEntity.badRequest().body("La date doit être dans le futur");
-            }*/
             Channel channel = channelService.createChannel(title, description, date, durationMinutes, ownerId);
             return ResponseEntity.ok("Canal créé avec succès");
         } catch (IllegalArgumentException e) {
@@ -46,6 +57,11 @@ public class ChannelRestController {
         }
     }
 
+    /**
+     * Récupère un canal par son identifiant
+     * @param id Identifiant du canal
+     * @return le canal
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Channel> getChannel(@PathVariable Long id) {
         return channelService.getChannelById(id)
@@ -53,6 +69,16 @@ public class ChannelRestController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Met à jour un canal
+     * @param id Identifiant du canal
+     * @param title Titre du canal
+     * @param description Description du canal
+     * @param date Date de début du canal
+     * @param durationMinutes Durée du canal en minutes
+     * @param token Token JWT
+     * @return le canal mis à jour
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateChannel(
             @PathVariable Long id,
@@ -75,7 +101,12 @@ public class ChannelRestController {
         }
     }
 
-        @DeleteMapping("/{id}")
+    /**
+     * Supprime un canal
+     * @param id Identifiant du canal
+     * @return la réponse HTTP
+     */
+    @DeleteMapping("/{id}")
         public ResponseEntity<?> deleteChannel(@PathVariable Long id) {
         try {
             channelService.deleteChannel(id);

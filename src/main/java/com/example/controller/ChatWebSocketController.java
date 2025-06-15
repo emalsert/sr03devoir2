@@ -26,6 +26,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.example.event.WebSocketEventListener;
 
+/**
+ * Contrôleur pour la gestion des WebSocket de chat (Controller WebSocket + RestController API)
+ * Gère les messages de chat, les fichiers et les utilisateurs connectés
+ */
 @Controller
 @RequiredArgsConstructor
 public class ChatWebSocketController {
@@ -35,6 +39,12 @@ public class ChatWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketEventListener webSocketEventListener;
 
+    /**
+     * Envoie un message de chat
+     * @param channelId Identifiant du canal
+     * @param message Message de chat
+     * @param headerAccessor Accesseur pour les headers WebSocket
+     */
     @MessageMapping("/chat/{channelId}/send")
     public void sendMessage(
             @DestinationVariable Long channelId,
@@ -59,6 +69,12 @@ public class ChatWebSocketController {
         chatWebSocketService.sendTextMessageToChannel(channelId, message, username);
     }
 
+    /**
+     * Joint un canal
+     * @param channelId Identifiant du canal
+     * @param userId Identifiant de l'utilisateur
+     * @param headerAccessor Accesseur pour les headers WebSocket
+     */
     @MessageMapping("/chat/{channelId}/join/{userId}")
     public void joinChannel(@DestinationVariable Long channelId, @DestinationVariable Long userId, SimpMessageHeaderAccessor headerAccessor) {
         String sessionId = headerAccessor.getSessionId();
@@ -66,6 +82,12 @@ public class ChatWebSocketController {
         chatWebSocketService.addUserToChannel(channelId, userId);
     }
 
+    /**
+     * Envoie un fichier
+     * @param channelId Identifiant du canal
+     * @param file Fichier à envoyer
+     * @param request Requête HTTP
+     */
     @PostMapping("/api/chat/{channelId}/file")
     @ResponseBody
     public void sendFile(
@@ -84,11 +106,6 @@ public class ChatWebSocketController {
         chatWebSocketService.sendFileToChannel(channelId, file, username);
     }
 
-    // Retourner la liste des utilisateurs connectés au canal
-    @GetMapping("/api/chat/{channelId}/users")
-    public ResponseEntity<Map<String, String>> getChannelUsers(@PathVariable Long channelId) {
-        return ResponseEntity.ok(chatWebSocketService.getChannelUsers(channelId));
-    }
 
     // Cette méthode sera appelée automatiquement quand un utilisateur se déconnecte
     public void handleDisconnect(Long channelId, Long userId) {

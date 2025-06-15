@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des utilisateurs
+ * Gère les opérations de base sur les utilisateurs qui sont utilisées dans le controller
+ */
 @Service
 @Transactional
 public class UserService {

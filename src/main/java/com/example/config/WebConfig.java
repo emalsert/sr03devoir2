@@ -7,9 +7,17 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuration de la gestion des ressources statiques et des médias
+ * Définit les mappings pour les ressources statiques et les médias
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    /**
+     * Configure les mappings pour les requêtes CORS
+     * @param registry le registre des mappings CORS
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -20,6 +28,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true);
     }
 
+    /**
+     * Configure les mappings pour les ressources statiques
+     * @param registry le registre des mappings des ressources statiques
+     */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/webjars/**")
@@ -38,6 +50,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .resourceChain(true);
     }
 
+    /**
+     * Configure la négociation de contenu
+     * @param configurer le configureur de négociation de contenu
+     */
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         configurer
