@@ -42,21 +42,6 @@ const UserChannels = () => {
     }
   }, [user]);
 
-  const loadUserChannelsOwner = useCallback(async () => {
-
-    try {
-      setLoading(true);
-      const channelsOwnerData = await userService.getCurrentUserChannelsOwner(user);
-      setChannelsOwner(channelsOwnerData);
-    }
-    catch (err) {
-      setError('Erreur lors du chargement des canaux');
-      console.error('Error loading user channels:', err);
-    }
-    finally {
-      setLoading(false);
-    }
-  }, [user]);
 
   const loadUserInvitations = useCallback(async () => {
     try {
@@ -76,7 +61,6 @@ const UserChannels = () => {
   useEffect(() => {
     if (user) {
       loadUserChannels();
-      loadUserChannelsOwner();
       loadUserInvitations();
     }
 
@@ -92,7 +76,7 @@ const UserChannels = () => {
     if (user) {
       fetchUsers();
     }
-  }, [user, loadUserChannels, loadUserInvitations, loadUserChannelsOwner]);
+  }, [user, loadUserInvitations, loadUserChannels]);
 
   // Gérer l'édition d'un canal
   const handleEdit = (channel) => {
@@ -105,7 +89,6 @@ const UserChannels = () => {
     if (!channelToDelete) return;
       try {
       await channelService.deleteChannel(channelToDelete.channelId);
-        await loadUserChannels();
       setShowDeleteModal(false);
       setChannelToDelete(null);
       } catch (err) {
@@ -163,7 +146,6 @@ const UserChannels = () => {
       setTimeout(() => {
         setCreateChannelAlert(null);
         setShowToast(false);
-        loadUserChannels();
       }, 2000);
     } else {
       setTimeout(() => setShowToast(false), 2000);
@@ -311,7 +293,7 @@ const UserChannels = () => {
                 onChange={(e) => setSelectedChannelId(e.target.value)}
             >
               <option value="">Sélectionnez un canal</option>
-              {channelsOwner.map((ch) => (
+              {channels.map((ch) => ch.owner.userId === user.userId && (
                   <option key={ch.channelId} value={ch.channelId}>
                     {ch.title}
                   </option>

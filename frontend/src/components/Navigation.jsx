@@ -87,7 +87,7 @@ const Navigation = () => {
             {sidebarOpen && (
                 <div className="sidebar open d-md-none" onClick={() => setSidebarOpen(false)}>
                     {sidebarContent}
-                </div>
+        </div>
             )}
         </>
     );
